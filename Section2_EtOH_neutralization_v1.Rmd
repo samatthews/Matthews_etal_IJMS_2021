@@ -1,0 +1,319 @@
+---
+title: "COI EtOH neutralization"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+knitr::is_latex_output()
+#output: html_document:
+#    keep_md: true
+library(phyloseq)
+library(vegan)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(clustsig)
+library(ggdendro)
+library(gridExtra)
+library(stringr)
+library(dendextend)
+library(Biostrings)
+library(insect)
+library(ape)
+library(seqinr)
+library(decontam)
+library(lmodel2)
+library(mgcv)
+library(goeveg)
+library(metagMisc)
+library(dendextend)
+library(magrittr)
+library(rstatix)
+library(lemon)
+theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+```{r import COI data}
+in_biom <- import_biom("~/Documents/Chapter4/etoh_nh4oh/exported-feature-table/feature-table_json.biom")
+#sample_names(in_biom)
+
+md <- import_qiime_sample_data("~/Documents/Chapter4/etoh_nh4oh/metadata_2.txt") #### 
+in_biom <- merge_phyloseq(in_biom, md)
+
+#assigned through midori web reference http://reference-midori.info/server.php
+#with RDP classifier, COI, unique, confidence cutoff 0.8
+taxcsv <- read.csv("~/Documents/Chapter4/etoh_nh4oh/RDPClassifier_out/20201015225551_24.43.252.202_usga_classified.txt", sep="\t", header = F)
+
+###this separates the taxonomy from the confidence 
+#taxonomy <- taxcsv[,c(6, 9, 12, 15, 18, 21, 24)]
+#taxonomy_conf <- taxcsv[,c(8, 11, 14, 17, 20, 23, 26)]
+#rownames(taxonomy) <- taxcsv$V1
+#rownames(taxonomy_conf) <- taxcsv$V1
+#taxfull <- merge(taxonomy, taxonomy_conf)
+
+###this filters the taxonomy from the confidence
+mylist <- list() #create an empty list
+k <- 1
+for (i in c(6, 9, 12, 15, 18, 21, 24)){
+  j <- i + 2
+  confidence <- taxcsv[,j]
+  #truefalse <- truefalse > 0.8
+  assignment <- taxcsv[,i]
+  assignment[confidence < 0.8] <- NA
+  mylist[[k]] <- assignment
+  k <- k+1
+}
+taxonomy <- do.call("cbind",mylist) #combine all vectors into a matrix
+rownames(taxonomy) <- taxcsv$V1
+
+#convert to phyloseq objects
+in_biom_tax <- tax_table(taxonomy)
+taxa_names(in_biom_tax) <- rownames(taxonomy)
+
+#### combine filtered phyloseq object and taxonomy infor
+in_biom <- merge_phyloseq(in_biom, in_biom_tax)
+
+COI <- in_biom
+
+save(COI, file = "~/Documents/Chapter4/etoh_nh4oh/COI_v1biom_etohnh4oh_midoritax.Rdat")
+
+rm(list=c("in_biom", "md", "taxonomy", "taxcsv", "mylist", "taxonomy"))
+```
+
+```{r}
+## ok - need to  combine the non-quant subsamples relative to their original biomass
+sample_data(COI)
+scratch <- rarefy_even_depth(COI)
+size_factors <- sample_data(scratch)$biomass #get original biomass
+size_factors2 <- size_factors/c(6.957, 6.957, 11.041, 3.781, 5.475, 9.993, 9.993, 4.452, 6.957, 11.041, 3.781, 5.475, 9.993, 9.993, 4.452, 6.957) #divide by total biomass for each sample
+mat <- sweep(otu_table(scratch), 1 + taxa_are_rows(scratch), size_factors2, FUN = `/`) #adjust sequencing depth to reflect fraction of original biomass
+mat <- round(mat)
+scratch0 <- scratch #add adjusted otu table back into phyloseq object
+otu_table(scratch0) <- otu_table(mat, taxa_are_rows = taxa_are_rows(scratch)) 
+otu_table(scratch0)
+sample_data(scratch0)$mergebiomass <- paste(sample_data(scratch0)$sampleunique, sample_data(scratch0)$rep)
+COI_mergedbiomass <- merge_samples(scratch0, group = "mergebiomass") #merge 
+
+#get sample data out of sample names (coerced to NAs by merge)
+sample_data(COI_mergedbiomass)$sampleid <- strsplit(sample_names(COI_mergedbiomass), " ", ) %>% sapply(extract2, 1)
+
+COI_proportional_merge <- merge_samples(COI_mergedbiomass, group = "sampleid") #merge replicates
+sample_data(COI_proportional_merge)$TowLocation <- strsplit(sample_names(COI_proportional_merge), "-", ) %>% sapply(extract2, 1)
+sample_data(COI_proportional_merge)$TowTime <- strsplit(sample_names(COI_proportional_merge), "-", ) %>% sapply(extract2, 2)
+sample_data(COI_proportional_merge)$Preservative <- strsplit(sample_names(COI_proportional_merge), "-", ) %>% sapply(extract2, 3)
+
+
+```
+
+```{r combine paired samples}
+#includes both non-quant splits from extraction process and duplicate sequencing 
+COI_merged <- merge_samples(COI, group = "sampleunique")
+sample_data(COI_merged)$preservative <- c("Buffered", "Unbuffered", "Buffered", "Unbuffered", "Buffered", "Unbuffered")
+sample_data(COI_merged)$sampleid <- sample_names(COI_merged)
+sample_data(COI_merged)$towlocation <- c("CCE2-D", "CCE2-D", "CCE2-N", "CCE2-N", "LJC", "LJC")
+sample_data(COI_merged)
+
+```
+
+
+```{r buff v unbuff richness}
+#plot_bar(COI_merged, fill = "ta3") check what groups we have
+COI_merged_rarefied <- (COI_proportional_merge)
+sample_data(COI_merged_rarefied)$total_richness <- estimate_richness(COI_merged_rarefied, measures = "Observed")$Observed
+total <- COI_merged_rarefied
+malacostraca <- subset_taxa(COI_merged_rarefied, ta3 == "Malacostraca")
+maxillopoda <- subset_taxa(COI_merged_rarefied, ta3 == "Maxillopoda")
+ostracoda <- subset_taxa(COI_merged_rarefied, ta3 == "Ostracoda")
+polychaeta <- subset_taxa(COI_merged_rarefied, ta3 == "Polychaeta")
+hydrozoa <- subset_taxa(COI_merged_rarefied, ta3 == "Hydrozoa")
+ophiuroidea <- subset_taxa(COI_merged_rarefied, ta3 == "Ophiuroidea")
+gymnolaemata <- subset_taxa(COI_merged_rarefied, ta3 == "Gymnolaemata")
+gastropoda <- subset_taxa(COI_merged_rarefied, ta3 == "Gastropoda")
+brachiopoda <- subset_taxa(COI_merged_rarefied, ta3 == "Branchiopoda")
+actinopteri <- subset_taxa(COI_merged_rarefied, ta3 == "Actinopteri")
+insecta <- subset_taxa(COI_merged_rarefied, ta3 == "Insecta")
+cephalopoda <- subset_taxa(COI_merged_rarefied, ta3 == "Cephalopoda")
+polychaeta <- subset_taxa(COI_merged_rarefied, ta3 == "Polychaeta")
+echinoidea <- subset_taxa(COI_merged_rarefied, ta3 == "Echinoidea")
+
+
+sample_data(COI_merged_rarefied)$Malacostracans <- estimate_richness(malacostraca, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Maxillopods <- estimate_richness(maxillopoda, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Ostracods <- estimate_richness(ostracoda, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Polychaetes <- estimate_richness(polychaeta, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Hydrozoans <- estimate_richness(hydrozoa, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Ophiuroids <- estimate_richness(ophiuroidea, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Bryozoans <- estimate_richness(gymnolaemata, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Gastropods <- estimate_richness(gastropoda, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Brachiopods <- estimate_richness(brachiopoda, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Fishes <- estimate_richness(actinopteri, measures = "Observed")$Observed
+#sample_data(COI_merged_rarefied)$Insects <- estimate_richness(insecta, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Cephalopods <- estimate_richness(cephalopoda, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Polychaetes <- estimate_richness(polychaeta, measures = "Observed")$Observed
+sample_data(COI_merged_rarefied)$Echinoderms <- estimate_richness(echinoidea, measures = "Observed")$Observed
+
+df_new <- data.frame(sample_data(COI_merged_rarefied))
+df_new <- df_new[,2:ncol(df_new)]
+
+df_pivoted1_new <- df_new %>% pivot_longer(cols = colnames(df_new)[c(15:27)],
+                    names_to = "group",
+                    values_to = "observed") %>%
+  ungroup() 
+
+df_pivoted2_new <- df_pivoted1_new %>%
+  pivot_wider(id_cols = c("TowLocation", "TowTime", "group"),
+    names_from = c("Preservative"),
+              values_from = "observed") %>%
+  ungroup()
+df_pivoted2_new$Sample <- paste(df_pivoted2_new$TowLocation, df_pivoted2_new$TowTime)
+df_pivoted2_new$Sample[df_pivoted2_new$Sample == "LJC Morning"] <- "LJC Day"
+
+
+
+pairwise.wilcox.test(df_pivoted1_new$observed, df_pivoted1_new$Preservative, paired = T)
+
+p <- ggplot(data = df_pivoted2_new, aes(x = unbuff, y = buffered, color = group, shape = Sample)) + 
+  geom_point(size=.8) + 
+  guides(size = FALSE, color=guide_legend(keywidth=2.5,
+                 keyheight=2.5,
+                 default.unit="mm"), 
+          shape=guide_legend(keywidth=2.5,
+                 keyheight=2.5,
+                 default.unit="mm"),
+         legend.key = element_rect(size = 2.5, fill = "white", colour = NA)) +
+  geom_abline(intercept=0, slope=1, size = 0.1) +
+  theme_bw(base_size = 6) + 
+  xlab("Richness in Untreated Samples") + 
+  ylab("Richness in Neutralized Samples ") + 
+  coord_fixed(ratio = 1, xlim = NULL, ylim = NULL, expand = TRUE, clip = "on") +
+  labs(size = NULL, shape = "Sample", color = "Taxon") +
+  scale_color_discrete(name = "Taxon", labels = c("Brachiopods", "Bryozoans", "Cephalopods", "Echinoderms", "Fishes", "Gastropods", "Hydrozoans", "Malacostracans", "Maxillopods", "Ophiuroids", "Ostracods", "Polychaetes", "Total Richness"))
+#  ylim(0,65) + 
+#  xlim(0,65)
+p
+
+p1 <- p 
+p2 <- p + ylim(c(0, 17)) + xlim(c(0,17)) + labs(size = NULL, shape = NULL, color = NULL) + theme(legend.position = "none") + ylab(NULL) + xlab(NULL) + geom_point(size = .5) 
+
+
+tiff('~/Documents/Chapter4/Oct2020_ICES/plots/Figure4_v2_2020-11-17.tiff', width=85,height=60, units = "mm", res = 300)
+p1 + annotation_custom(ggplotGrob(p2), xmin = 115, xmax = 240, 
+                       ymin = -8.5, ymax = 110) +
+ theme_bw(base_size = 6) +
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7),
+        legend.spacing.y = unit(1.0, 'mm'))
+dev.off()
+
+
+
+```
+
+
+```{r simprof}
+scratch <- COI_proportional_merge
+scratch <-  transform_sample_counts(scratch, function(x) x/sum(x))
+sample_names(scratch) <- c("CCE2-D Neutralized", "CCE2-D Untreated", "CCE2-N Neutralized", "CCE2-N Untreated", "LJC Neutralized", "LJC Untreated")
+res2 <- simprof(data=(data.frame(otu_table(scratch))), 
+method.distance="braycurtis", num.expected = 1000, num.simulated = 999, silent = FALSE, increment = 100)
+# Graph the result
+#pl.color <- simprof.plot(res2)
+```
+
+```{r pretty plot simprof}
+
+#tiff('plots/Figure5_v3-2020-11-13.tiff', width=85,height=90, units = "mm", res = 300) 
+#par(mar=c(10,3,1,1))  # Increase bottom margin to have the complete label
+#simprof.plot(res2, leafcolors = c("red", "blue"), siglinetype = 2, lwd = 0.8)
+#dev.off()
+
+
+```
+
+```{r ggplot plot simprof as dendro for more control}
+hca <- res2$hclust %>% as.dendrogram %>% hang.dendrogram
+clust <- cutree(hca,k=2)  
+dendr <- dendro_data(hca, type = "rectangle")
+clust.df <- data.frame(cluster = factor(clust))
+clust.df$label <- rownames(clust.df)
+dendr[["labels"]]   <- merge(dendr[["labels"]],clust.df, by="label")
+rect <- aggregate(x~cluster,label(dendr),range)
+rect <- data.frame(rect$cluster,rect$x)
+ymax <- mean(hca$height[length(hca$height)-((k-2):(k-1))])
+
+
+tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure5_v3_2020-11-17.tiff", width=85,height=90, units = "mm", res = 300) 
+ggplot() + 
+  geom_segment(data=segment(dendr), aes(x=x, y=y, xend=xend, yend=yend),size = 0.3) + 
+#  geom_text(data=label(dendr), aes(x, y,label=label, hjust=0, color=cluster), size=3, angle = 90) +
+  geom_text(data=label(dendr), aes(x, y-13,label=c("Neutralized", "Untreated", "Neutralized", "Untreated", "Neutralized", "Untreated"), hjust=0, color=cluster), size=2.5, angle = 90) +
+  scale_color_manual(values = c("maroon", "navy"))+
+    annotate("text", label ="La Jolla\n Canyon", x = 1.5, y = -37, size = 2.5) +
+  annotate("text", label = "CCE-2 Mooring", x = 4.5, y = -37, size = 2.5) + 
+  annotate("text", label = "Day", x = 3.5, y = -25, size = 2.5) +
+  annotate("text", label = "Night", x = 5.5, y = -25, size = 2.5) +
+    geom_rect(aes(xmin=0.6, xmax=2.4, ymin=-45, ymax=50), 
+            color=NA, fill=rgb(0,0,1, alpha = 0.2)) +
+      geom_rect(aes(xmin=2.6, xmax=6.4, ymin=-45, ymax=50), 
+            color=NA, fill=rgb(1,0,0, alpha = 0.2)) +
+  theme_minimal(base_size = 6) +
+    ylim(-50, 100) + 
+  xlim(0.5,7) +
+  scale_y_continuous(breaks=seq(-60,100,by=20), labels=c("","", "", "", "20", "40", "60", "80", "100")) +
+#  coord_flex_cart(left=brackets_vertical())+
+    ylab("Bray-Curtis Distance") + 
+  xlab(NULL) +
+  #geom_segment(aes(x = 0, y = 100, xend = 0, yend = 40)) +
+  theme(legend.position = "none",
+        axis.ticks.y.left = element_line(),
+        axis.line.y.left = element_line(),
+        plot.title = element_text(hjust = 0.5),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        axis.text.y = element_text(color = "black", size = 5),  
+        axis.title.y = element_text(color = "black", size = 6)) + 
+  ggtitle("Bray-Curtis Distance, SIMPROF")+
+  coord_capped_cart(left = "bottom") 
+dev.off()
+
+p + coord_flex_cart(left=brackets_vertical())
+p + coord_capped_cart(gap = 1)
+p + scale_y_continuous(expand = expand_scale(mult = c(0, 0)))
+
+
+
+p
+dev.off()
+
+#ggdendrogram(res2dend, rotate = FALSE, size = 2) + geom_rect(data=rect, aes(xmin=X1-.3, xmax=X2+.3, ymin=0, ymax=ymax), color="red", fill=NA)+
+
+```
+
+
+```{r}
+scratch <- rarefy_even_depth(COI_mergedbiomass)
+bc_dist <- phyloseq::distance(scratch, method="bray", type = "samples")
+sampledf <- data.frame(sample_data(scratch))
+adonis(bc_dist ~ preservative*towlocation, data = sampledf)
+
+ordination <- ordinate(scratch, method="MDS", "bray")
+plot_ordination(scratch, ordination, color="preservative") + theme(aspect.ratio=1) + theme_bw()
+
+adonis(bc_dist ~ sample_data(scratch)$preservative)
+
+#pdf('plots/MDS_braycurtis.pdf', width=10,height=8) 
+#plot_ordination(scratch, ordination, color="preservative", shape = "vial", size = 3) + theme(aspect.ratio=1) + theme_bw()
+#dev.off()
+
+```
+
+Adonis R^2 tells us how much of the observed differences can be explained by each variable. towlocation (which here includes time and is unique for each tow) is the only significant variable out of the two, and explains 79% of the observed differences. preservative and the interaction between preservative and tow location are both non-significant, and explain only 2% and 2.5% of the observed differences, respectively. We can conclude that preservative has no effect. 
+
+
+

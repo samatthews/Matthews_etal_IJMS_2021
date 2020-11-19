@@ -1,0 +1,304 @@
+---
+title: "18S_COI_Methods_plot_together"
+output: html_document
+---
+```{r setup}
+library(ranacapa)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+knitr::is_latex_output()
+#output: html_document:
+#    keep_md: true
+library(phyloseq)
+library(vegan)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(clustsig)
+library(ggdendro)
+library(gridExtra)
+library(stringr)
+library(dendextend)
+library(Biostrings)
+library(insect)
+library(ape)
+library(seqinr)
+library(decontam)
+library(lmodel2)
+library(mgcv)
+library(goeveg)
+library(metagMisc)
+theme_update(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+```{r load}
+load("~/Documents/Chapter4/Oct2020_ICES/COI_v1biom_ZOOPLANKTON.Rdat")
+sample_data(zooplankton_COI_midori)$sequencingdepth <- sample_sums(zooplankton_COI_midori)
+sample_data(zooplankton_COI_midori)$observed <- estimate_richness(zooplankton_COI_midori, measures = "Observed")$Observed
+sample_data(zooplankton_COI_midori)$percentprocessed <- as.numeric(sample_data(zooplankton_COI_midori)$percentprocessed)
+zooplankton_COI_midori <- prune_samples(sample_sums(zooplankton_COI_midori) > 0, zooplankton_COI_midori)
+load("~/Documents/Chapter4/Oct2020_ICES/18S_v1biom_ZOOPLANKTON.Rdat")
+sample_data(zooplankton_18S_silva)$sequencingdepth <- sample_sums(zooplankton_18S_silva)
+sample_data(zooplankton_18S_silva)$observed <- estimate_richness(zooplankton_18S_silva, measures = "Observed")$Observed
+sample_data(zooplankton_18S_silva)$percentprocessed <- as.numeric(sample_data(zooplankton_18S_silva)$percentprocessed)
+
+```
+
+
+```{r figure 1}
+#out18s <- rarecurve(t(otu_table(zooplankton_18S_silva)), step=1000, label = FALSE) 
+#outCOI <- rarecurve(t(otu_table(zooplankton_COI_midori)), step=1000, label = FALSE) 
+
+out18s <- ggrare(zooplankton_18S_silva, step = 1000, se = FALSE)
+outCOI <- ggrare(zooplankton_COI_midori, step = 1000, se = TRUE)
+out18s <- out18s + theme_bw(base_size = 7) + ggtitle("B. 18S Rarefaction Curves") + geom_line(size=0.05)+
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7))
+outCOI <- outCOI + theme_bw(base_size = 7) + ggtitle("A. COI Rarefaction Curves") + geom_line(size=0.05)+
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7))
+
+df_COI <- data.frame(sample_data(rarefy_even_depth(zooplankton_COI_midori, sample.size = 10747)))
+scatter_COI <- ggplot(data = df_COI, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 0.2) +
+  theme_bw(base_size = 7) + 
+   ggtitle("C. Rarefied COI OTUs") + 
+  xlab("Original Sequencing Depth") + 
+  ylab("Observed OTUs (Rarefied)") +
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7))
+scatter_COI
+cor.test(x = df_COI$sequencingdepth, y = df_COI$observed, method = "spearman", alternative = "greater")
+
+
+df_18S <- data.frame(sample_data(rarefy_even_depth(zooplankton_18S_silva, sample.size = 10383)))
+scatter_18S <- ggplot(data = df_18S, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 0.2) +
+  theme_bw(base_size = 7) + 
+   ggtitle("D. Rarefied 18S OTUs")+ 
+  xlab("Original Sequencing Depth") + 
+  ylab("Observed ASVs (Rarefied)")+
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7))
+scatter_18S
+cor.test(x = df_18S$sequencingdepth, y = df_18S$observed, method = "spearman", alternative = "greater")
+
+
+tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_v2_2020-11-17.tiff", width=85,height=60, units = "mm", res = 300) 
+grid.arrange(outCOI, out18s, scatter_COI, scatter_18S, nrow = 2)
+dev.off()
+```
+
+
+
+
+
+
+
+```{r figure 2}
+
+scratchcoi <- prune_samples(sample_sums(zooplankton_COI_midori) > 7916, zooplankton_COI_midori)
+scratchcoi <- rarefy_even_depth(scratchcoi, sample.size =  7916)
+samples <- unique(sample_data(scratchcoi)$physicalsample)
+countreps <- table(sample_data(scratchcoi)$physicalsample)
+countreps <- countreps[countreps == 3]
+samples <- names(countreps)
+
+cbind.fill <- function(...){
+    nm <- list(...) 
+    nm <- lapply(nm, as.matrix)
+    n <- max(sapply(nm, nrow)) 
+    do.call(cbind, lapply(nm, function (x) 
+        rbind(x, matrix(, n-nrow(x), ncol(x))))) 
+}
+
+myresults <- list() #create an empty list for replicates observed
+myranks <- list() #create an empty list for rank order
+myobserved <- list() # create an empty list for number of observed species in the sample
+myshannon <- list() #create empty list for shannon diversity (evenness) of the sample
+k <- 1
+for (i in 1:length(samples)){
+  sampleidentifier <- samples[i]
+  scratch <- subset_samples(scratchcoi, physicalsample == sampleidentifier)
+  scratch <- filter_taxa(scratch, function(x) sum(x) > 0, TRUE)
+  rankabcurve <- racurve(t(otu_table(scratch)))
+  #rankabcurve has info on 1) total abundance of each taxa, 2) relative abundance of each taxa, 3) frequency (number of individual samples it occurs in)
+  df_meta <- as.data.frame(rankabcurve)
+  pa_18S <- phyloseq_standardize_otu_abundance(scratch, method = "pa")
+  pa_18S_merge <- merge_samples(pa_18S, group = "physicalsample", fun = mean)
+  df <- data.frame(otu_table(pa_18S_merge))
+  df[df == 0] <- NA
+  means <- colMeans(df, na.rm = T) #need to remove zeros - replace with na and then na ignore ? 
+  names(means) <- colnames(df)
+  means <- data.frame(means)
+  df_meta_plus <- merge(df_meta, means, by=0)
+  df_meta_plus <- df_meta_plus[order(-df_meta_plus$abund),]
+  df_meta_plus$rank <- seq(nrow(df_meta_plus))
+  myresults[[k]] <- df_meta_plus$means #save results
+  myranks[[k]] <- df_meta_plus$rank #save ranks
+  myobserved[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Observed")$Observed, n = nrow(df_meta_plus))
+  myshannon[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Shannon")$Shannon, n = nrow(df_meta_plus))
+  k <- k+1
+
+}
+  trashresults <- do.call("cbind.fill", myresults) #combine all vectors into a matrix
+  trashresults <- as.vector(t(trashresults))
+  trashranks <- do.call("cbind.fill", myranks) #combine all vectors into a matrix
+  trashranks <- as.vector(t(trashranks))
+  trashobserved <- do.call("cbind.fill", myobserved) #combine all vectors into a matrix
+  trashobserved <- as.vector(t(trashobserved))
+  trashshannon <- do.call("cbind.fill", myshannon) #combine all vectors into a matrix
+  trashshannon <- as.vector(t(trashshannon))
+  df_COI <- data.frame(trashresults, trashranks, trashobserved, trashshannon)
+  
+
+
+scratch18s <- prune_samples(sample_sums(zooplankton_18S_silva) > 8221, zooplankton_18S_silva)
+scratch18s <- rarefy_even_depth(scratch18s, sample.size =  8221)
+samples <- unique(sample_data(scratch18s)$Sample.ID)
+countreps <- table(sample_data(scratch18s)$Sample.ID)
+countreps <- countreps[countreps == 3]
+samples <- names(countreps)
+
+cbind.fill <- function(...){
+    nm <- list(...) 
+    nm <- lapply(nm, as.matrix)
+    n <- max(sapply(nm, nrow)) 
+    do.call(cbind, lapply(nm, function (x) 
+        rbind(x, matrix(, n-nrow(x), ncol(x))))) 
+}
+
+myresults <- list() #create an empty list for replicates observed
+myranks <- list() #create an empty list for rank order
+myobserved <- list() # create an empty list for number of observed species in the sample
+myshannon <- list() #create empty list for shannon diversity (evenness) of the sample
+k <- 1
+for (i in 1:length(samples)){
+  sampleidentifier <- samples[i]
+  scratch <- subset_samples(scratch18s, Sample.ID == sampleidentifier)
+  scratch <- filter_taxa(scratch, function(x) sum(x) > 0, TRUE)
+  rankabcurve <- racurve(t(otu_table(scratch)))
+  #rankabcurve has info on 1) total abundance of each taxa, 2) relative abundance of each taxa, 3) frequency (number of individual samples it occurs in)
+  df_meta <- as.data.frame(rankabcurve)
+  pa_18S <- phyloseq_standardize_otu_abundance(scratch, method = "pa")
+  pa_18S_merge <- merge_samples(pa_18S, group = "Sample.ID", fun = mean)
+  df <- data.frame(otu_table(pa_18S_merge))
+  df[df == 0] <- NA
+  means <- colMeans(df, na.rm = T) #need to remove zeros - replace with na and then na ignore ? 
+  names(means) <- colnames(df)
+  means <- data.frame(means)
+  df_meta_plus <- merge(df_meta, means, by=0)
+  df_meta_plus <- df_meta_plus[order(-df_meta_plus$abund),]
+  df_meta_plus$rank <- seq(nrow(df_meta_plus))
+  myresults[[k]] <- df_meta_plus$means #save results
+  myranks[[k]] <- df_meta_plus$rank #save ranks
+  myobserved[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Observed")$Observed, n = nrow(df_meta_plus))
+  myshannon[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Shannon")$Shannon, n = nrow(df_meta_plus))
+  k <- k+1
+}
+  trashresults <- do.call("cbind.fill", myresults) #combine all vectors into a matrix
+  trashresults <- as.vector(t(trashresults))
+  trashranks <- do.call("cbind.fill", myranks) #combine all vectors into a matrix
+  trashranks <- as.vector(t(trashranks))
+  trashobserved <- do.call("cbind.fill", myobserved) #combine all vectors into a matrix
+  trashobserved <- as.vector(t(trashobserved))
+  trashshannon <- do.call("cbind.fill", myshannon) #combine all vectors into a matrix
+  trashshannon <- as.vector(t(trashshannon))
+ # trashnames <- do.call("cbind",myobserved)
+  #colnames(trashresults) <- trashnames
+  df_18S <- data.frame(trashresults, trashranks, trashobserved, trashshannon)
+  
+  
+  df_18S$Marker <- rep("18S")
+  df_COI$Marker <- rep("COI")
+  
+  df <- rbind(df_COI, df_18S)
+ df$trashresults[df$trashresults > 3] <- 3 #we only want to count up to 3 but if there are more than 3 then we can count 3
+  
+
+df$Marker <- factor(df$Marker, levels = c("COI", "18S"))
+
+
+tiff('~/Documents/Chapter4/Oct2020_ICES/plots/Figure2_v2_2020-11-17.tiff', width=170,height=60, units = "mm", res = 300) 
+ggplot(df, aes(x = trashranks, y = trashresults)) +
+    geom_jitter(height = 0.25, size = 0.3) +
+#    ggtitle("Appearance in Replicates by Rank Order") + 
+    theme_bw(base_size = 7) +
+    xlab("Rank Order") + 
+    ylab("Replicates (N)")+ 
+  facet_wrap(Marker~., scales = "free_x", nrow = 1) + 
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7))
+dev.off()
+  
+  
+
+```
+
+```{r figure 3}
+df_COI <- data.frame(sample_data(zooplankton_COI_midori))
+df_COI <- df_COI[,c(3,24, 17)]
+df_COI$marker <- "COI"
+df_18S <- data.frame(sample_data(zooplankton_18S_silva))
+df_18S <- df_18S[,c(3,26,17)]
+df_18S$marker <- "18S"
+df <- rbind(df_18S, df_COI)
+
+df$marker <- factor(df$marker, levels = c("COI", "18S"))
+
+p <- ggplot(data = df, aes(x=percentprocessed, y=observed, color = volumewaterfiltered))+
+   geom_point(size = 0.3) +
+  facet_wrap(~marker, nrow = 2, scales = "free_y") +
+  #stat_summary(fun.data=mean_cl_normal) +
+  geom_smooth(method='loess', color = "black", span = 0.8, size = 0.3)+
+  theme_bw(base_size = 7) +
+  scale_color_continuous()+
+  # ggtitle("18S ASVs") + 
+  labs(color = "Volume of Water \nFiltered") +
+  xlab("% of Sample Analyzed") +
+  ylab("Richness") +
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(color = "black", size = 6),
+        axis.text.y = element_text(color = "black", size = 6),  
+        axis.title.x = element_text(color = "black", size = 7),
+        axis.title.y = element_text(color = "black", size = 7))
+p
+
+tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure3_v2_2020-11-17.tiff", width=170,height=60, units = "mm", res = 300) 
+p + facet_wrap(~marker, nrow = 1) 
+dev.off()
+
+
+```
+
+
+```{r test replicate clustering}
+scratch <- zooplankton_18S_ncbi
+sample_names(scratch) <- paste(sample_data(scratch)$Sample.ID, sample_data(scratch)$Rep, sample_data(scratch)$Name)
+scratch <- subset_taxa(scratch, taxa_sums(scratch) > 0)
+res2 <- simprof(data=(data.frame(otu_table(scratch))), 
+method.distance="braycurtis", num.expected = 1000, num.simulated = 999, silent = FALSE, increment = 1)
+pl.color <- simprof.plot(res2)
+
+scratch2 <- zooplankton_18S_ncbi
+sample_names(scratch2) <- paste(sample_data(scratch2)$!!!, sample_data(scratch2)$Rep, sample_data(scratch2)$Name)
+scratch2 <- subset_taxa(scratch2, taxa_sums(scratch2) > 0)
+res3 <- simprof(data=(data.frame(otu_table(scratch2))), 
+method.distance="braycurtis", num.expected = 1000, num.simulated = 999, silent = FALSE, increment = 100)
+pl.color <- simprof.plot(res3)
+
+
+```
+
+
