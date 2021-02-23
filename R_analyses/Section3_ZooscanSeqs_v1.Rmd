@@ -30,6 +30,7 @@ library(metagMisc)
 library(magrittr)
 library(ggpubr)
 theme_update(plot.title = element_text(hjust = 0.5))
+set.seed(2386)
 ```
 
 
@@ -41,21 +42,24 @@ load("~/Documents/Chapter4/Oct2020_ICES/18S_v1biom_ZOOPLANKTON.Rdat")
 COI <- zooplankton_COI_ncbi
 ZHAN <- zooplankton_18S_ncbi
 
-sample_data(COI)$uniquesamples <- paste(sample_data(COI)$Cycle, sample_data(COI)$time, sample_data(COI)$Net, sample_data(COI)$physicalsample)
-sample_data(ZHAN)$uniquesamples <- paste(sample_data(ZHAN)$Cycle, sample_data(ZHAN)$time, sample_data(ZHAN)$Net, sample_data(ZHAN)$Sample.ID)
+sample_data(COI)$uniquesamples <- paste(sample_data(COI)$cycle, sample_data(COI)$time, sample_data(COI)$net, sample_data(COI)$physicalsample, sample_data(COI)$tow)
+sample_data(ZHAN)$uniquesamples <- paste(sample_data(ZHAN)$cycle, sample_data(ZHAN)$time, sample_data(ZHAN)$net, sample_data(ZHAN)$Sample.ID, sample_data(ZHAN)$tow)
 
 COI <- merge_samples(COI, group = "uniquesamples")
 ZHAN <- merge_samples(ZHAN, group = "uniquesamples")
 
-sample_data(COI)$Cycle <- as.character(strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 1))
-sample_data(COI)$time <- strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 2)
-sample_data(COI)$Net <- as.character(strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 3))
-sample_data(COI)$physicalsample <- strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 5)
+sample_data(COI)$Cycle <- as.character(strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 2))
+sample_data(COI)$time <- strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 3)
+sample_data(COI)$Net <- as.character(strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 5))
+sample_data(COI)$physicalsample <- strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 7)
+sample_data(COI)$Tow <- strsplit(sample_names(COI), " ", ) %>% sapply(extract2, 9)
 
-sample_data(ZHAN)$Cycle <- as.character(strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 1))
-sample_data(ZHAN)$time <- strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 2)
-sample_data(ZHAN)$Net <- as.character(strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 3))
-sample_data(ZHAN)$physicalsample <- strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 5)
+sample_data(ZHAN)$Cycle <- as.character(strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 2))
+sample_data(ZHAN)$time <- strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 3)
+sample_data(ZHAN)$Net <- as.character(strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 5))
+sample_data(ZHAN)$physicalsample <- strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 7)
+sample_data(ZHAN)$Tow <- strsplit(sample_names(ZHAN), " ", ) %>% sapply(extract2, 9)
+
 
 sample_data(COI)$readcounts <- sample_sums(COI)
 sample_data(ZHAN)$readcounts <- sample_sums(ZHAN)
@@ -607,50 +611,50 @@ datasets_coi <- list(leray_appendicularians, leray_bryozoans, leray_chaetognaths
 ```
 
 ```{r reformat}
-zhan_appendicularians$propbiomass <- zhan_appendicularians$sumgroupbiomassugCm3/zhan_appendicularians$sumbiomassugCm3.x
-zhan_appendicularians$propabund <- zhan_appendicularians$Abundance....m.3..y/zhan_appendicularians$Abundancetotal.m3
+zhan_appendicularians$propbiomass <- zhan_appendicularians$sumgroupbiomassugCm3/zhan_appendicularians$sumbiomassugCm3
+zhan_appendicularians$propabund <- zhan_appendicularians$Abundance....m.3./zhan_appendicularians$Abundancetotal.m3
 zhan_appendicularians$propseqs <- zhan_appendicularians$taxprop
-zhan_bryozoans$propbiomass <- zhan_bryozoans$sumgroupbiomassugCm3/zhan_bryozoans$sumbiomassugCm3.x
-zhan_bryozoans$propabund <- zhan_bryozoans$Abundance....m.3..y/zhan_bryozoans$Abundancetotal.m3
+zhan_bryozoans$propbiomass <- zhan_bryozoans$sumgroupbiomassugCm3/zhan_bryozoans$sumbiomassugCm3
+zhan_bryozoans$propabund <- zhan_bryozoans$Abundance....m.3./zhan_bryozoans$Abundancetotal.m3
 zhan_bryozoans$propseqs <- zhan_bryozoans$taxprop
-zhan_cnidarians$propbiomass <- zhan_cnidarians$sumgroupbiomassugCm3/zhan_cnidarians$sumbiomassugCm3.x
-zhan_cnidarians$propabund <- zhan_cnidarians$Abundance....m.3..y/zhan_cnidarians$Abundancetotal.m3
+zhan_cnidarians$propbiomass <- zhan_cnidarians$sumgroupbiomassugCm3/zhan_cnidarians$sumbiomassugCm3
+zhan_cnidarians$propabund <- zhan_cnidarians$Abundance....m.3./zhan_cnidarians$Abundancetotal.m3
 zhan_cnidarians$propseqs <- zhan_cnidarians$taxprop
-zhan_calanoids$propbiomass <- zhan_calanoids$sumgroupbiomassugCm3/zhan_calanoids$sumbiomassugCm3.x
-zhan_calanoids$propabund <- zhan_calanoids$Abundance....m.3..y/zhan_calanoids$Abundancetotal.m3
+zhan_calanoids$propbiomass <- zhan_calanoids$sumgroupbiomassugCm3/zhan_calanoids$sumbiomassugCm3
+zhan_calanoids$propabund <- zhan_calanoids$Abundance....m.3./zhan_calanoids$Abundancetotal.m3
 zhan_calanoids$propseqs <- zhan_calanoids$taxprop
-zhan_eucalanids$propbiomass <- zhan_eucalanids$sumgroupbiomassugCm3/zhan_eucalanids$sumbiomassugCm3.x
-zhan_eucalanids$propabund <- zhan_eucalanids$Abundance....m.3..y/zhan_eucalanids$Abundancetotal.m3
+zhan_eucalanids$propbiomass <- zhan_eucalanids$sumgroupbiomassugCm3/zhan_eucalanids$sumbiomassugCm3
+zhan_eucalanids$propabund <- zhan_eucalanids$Abundance....m.3./zhan_eucalanids$Abundancetotal.m3
 zhan_eucalanids$propseqs <- zhan_eucalanids$euphprop
-zhan_oithona$propbiomass <- zhan_oithona$sumgroupbiomassugCm3/zhan_oithona$sumbiomassugCm3.x
-zhan_oithona$propabund <- zhan_oithona$Abundance....m.3..y/zhan_oithona$Abundancetotal.m3
+zhan_oithona$propbiomass <- zhan_oithona$sumgroupbiomassugCm3/zhan_oithona$sumbiomassugCm3
+zhan_oithona$propabund <- zhan_oithona$Abundance....m.3./zhan_oithona$Abundancetotal.m3
 zhan_oithona$propseqs <- zhan_oithona$taxprop
-zhan_poecilostomatoids$propbiomass <- zhan_poecilostomatoids$sumgroupbiomassugCm3/zhan_poecilostomatoids$sumbiomassugCm3.x
-zhan_poecilostomatoids$propabund <- zhan_poecilostomatoids$Abundance....m.3..y/zhan_poecilostomatoids$Abundancetotal.m3
+zhan_poecilostomatoids$propbiomass <- zhan_poecilostomatoids$sumgroupbiomassugCm3/zhan_poecilostomatoids$sumbiomassugCm3
+zhan_poecilostomatoids$propabund <- zhan_poecilostomatoids$Abundance....m.3./zhan_poecilostomatoids$Abundancetotal.m3
 zhan_poecilostomatoids$propseqs <- zhan_poecilostomatoids$euphprop
-zhan_doliolids$propbiomass <- zhan_doliolids$sumgroupbiomassugCm3/zhan_doliolids$sumbiomassugCm3.x
-zhan_doliolids$propabund <- zhan_doliolids$Abundance....m.3..y/zhan_doliolids$Abundancetotal.m3
+zhan_doliolids$propbiomass <- zhan_doliolids$sumgroupbiomassugCm3/zhan_doliolids$sumbiomassugCm3
+zhan_doliolids$propabund <- zhan_doliolids$Abundance....m.3./zhan_doliolids$Abundancetotal.m3
 zhan_doliolids$propseqs <- zhan_doliolids$taxprop
-zhan_thaliaceans$propbiomass <- zhan_thaliaceans$sumgroupbiomassugCm3/zhan_thaliaceans$sumbiomassugCm3.x
-zhan_thaliaceans$propabund <- zhan_thaliaceans$Abundance....m.3..y/zhan_thaliaceans$Abundancetotal.m3
+zhan_thaliaceans$propbiomass <- zhan_thaliaceans$sumgroupbiomassugCm3/zhan_thaliaceans$sumbiomassugCm3
+zhan_thaliaceans$propabund <- zhan_thaliaceans$Abundance....m.3./zhan_thaliaceans$Abundancetotal.m3
 zhan_thaliaceans$propseqs <- zhan_thaliaceans$taxprop
-zhan_malacostraca$propbiomass <- zhan_malacostraca$sumgroupbiomassugCm3/zhan_malacostraca$sumbiomassugCm3.x
-zhan_malacostraca$propabund <- zhan_malacostraca$Abundance....m.3..y/zhan_malacostraca$Abundancetotal.m3
+zhan_malacostraca$propbiomass <- zhan_malacostraca$sumgroupbiomassugCm3/zhan_malacostraca$sumbiomassugCm3
+zhan_malacostraca$propabund <- zhan_malacostraca$Abundance....m.3./zhan_malacostraca$Abundancetotal.m3
 zhan_malacostraca$propseqs <- zhan_malacostraca$taxprop
-zhan_ostracods$propbiomass <- zhan_ostracods$sumgroupbiomassugCm3/zhan_ostracods$sumbiomassugCm3.x
-zhan_ostracods$propabund <- zhan_ostracods$Abundance....m.3..y/zhan_ostracods$Abundancetotal.m3
+zhan_ostracods$propbiomass <- zhan_ostracods$sumgroupbiomassugCm3/zhan_ostracods$sumbiomassugCm3
+zhan_ostracods$propabund <- zhan_ostracods$Abundance....m.3./zhan_ostracods$Abundancetotal.m3
 zhan_ostracods$propseqs <- zhan_ostracods$taxprop
-zhan_polychaete$propbiomass <- zhan_polychaete$sumgroupbiomassugCm3/zhan_polychaete$sumbiomassugCm3.x
-zhan_polychaete$propabund <- zhan_polychaete$Abundance....m.3..y/zhan_polychaete$Abundancetotal.m3
+zhan_polychaete$propbiomass <- zhan_polychaete$sumgroupbiomassugCm3/zhan_polychaete$sumbiomassugCm3
+zhan_polychaete$propabund <- zhan_polychaete$Abundance....m.3./zhan_polychaete$Abundancetotal.m3
 zhan_polychaete$propseqs <- zhan_polychaete$taxprop
-zhan_pteropods$propbiomass <- zhan_pteropods$sumgroupbiomassugCm3/zhan_pteropods$sumbiomassugCm3.x
-zhan_pteropods$propabund <- zhan_pteropods$Abundance....m.3..y/zhan_pteropods$Abundancetotal.m3
+zhan_pteropods$propbiomass <- zhan_pteropods$sumgroupbiomassugCm3/zhan_pteropods$sumbiomassugCm3
+zhan_pteropods$propabund <- zhan_pteropods$Abundance....m.3./zhan_pteropods$Abundancetotal.m3
 zhan_pteropods$propseqs <- zhan_pteropods$taxprop
-zhan_pyrosomes$propbiomass <- zhan_pyrosomes$sumgroupbiomassugCm3/zhan_pyrosomes$sumbiomassugCm3.x
-zhan_pyrosomes$propabund <- zhan_pyrosomes$Abundance....m.3..y/zhan_pyrosomes$Abundancetotal.m3
+zhan_pyrosomes$propbiomass <- zhan_pyrosomes$sumgroupbiomassugCm3/zhan_pyrosomes$sumbiomassugCm3
+zhan_pyrosomes$propabund <- zhan_pyrosomes$Abundance....m.3./zhan_pyrosomes$Abundancetotal.m3
 zhan_pyrosomes$propseqs <- zhan_pyrosomes$taxprop
-zhan_salps$propbiomass <- zhan_salps$sumgroupbiomassugCm3/zhan_salps$sumbiomassugCm3.x
-zhan_salps$propabund <- zhan_salps$Abundance....m.3..y/zhan_salps$Abundancetotal.m3
+zhan_salps$propbiomass <- zhan_salps$sumgroupbiomassugCm3/zhan_salps$sumbiomassugCm3
+zhan_salps$propabund <- zhan_salps$Abundance....m.3./zhan_salps$Abundancetotal.m3
 zhan_salps$propseqs <- zhan_salps$taxprop
 
 
@@ -672,45 +676,73 @@ zhan_proportions$percentprocessed <- zhan_salps$percentprocessed
 zhan_proportions$time <- zhan_salps$time
 
 
+zhan_proportions$Net <- NA
+zhan_proportions$Net[zhan_proportions$net == 1] <- "350-400m"
+zhan_proportions$Net[zhan_proportions$net == 2] <- "300-350m"
+zhan_proportions$Net[zhan_proportions$net == 3] <- "250-300m"
+zhan_proportions$Net[zhan_proportions$net == 4] <- "200-250m"
+zhan_proportions$Net[zhan_proportions$net == 5] <- "150-200m"
+zhan_proportions$Net[zhan_proportions$net == 6] <- "100-150m"
+zhan_proportions$Net[zhan_proportions$net == 7] <- "50-100m"
+zhan_proportions$Net[zhan_proportions$net == 8] <- "0-50m"
+zhan_proportions$Net[zhan_proportions$net == 1 && zhan_proportions$Cycle == "4"] <- "150-200m"
+zhan_proportions$Net[zhan_proportions$net == 2 && zhan_proportions$Cycle == "4"] <- "150-200m"
+zhan_proportions$Net[zhan_proportions$net == 3 && zhan_proportions$Cycle == "4"] <- "100-150m"
+zhan_proportions$Net[zhan_proportions$net == 4 && zhan_proportions$Cycle == "4"] <- "100-150m"
+zhan_proportions$Net[zhan_proportions$net == 5 && zhan_proportions$Cycle == "4"] <- "50-100m"
+zhan_proportions$Net[zhan_proportions$net == 6 && zhan_proportions$Cycle == "4"] <- "50-100m"
+zhan_proportions$Net[zhan_proportions$net == 7 && zhan_proportions$Cycle == "4"] <- "0-50m"
+zhan_proportions$Net[zhan_proportions$net == 8 && zhan_proportions$Cycle == "4"] <- "0-50m"
 
-leray_appendicularians$propbiomass <- leray_appendicularians$sumgroupbiomassugCm3/leray_appendicularians$sumbiomassugCm3.x
-leray_appendicularians$propabund <- leray_appendicularians$Abundance....m.3..y/leray_appendicularians$Abundancetotal.m3
+zhan_proportions$Cycle <- NA
+zhan_proportions$Cycle[zhan_proportions$cycle == 1] <- "Offshore Stratified"
+zhan_proportions$Cycle[zhan_proportions$cycle == 2] <- "California Current"
+zhan_proportions$Cycle[zhan_proportions$cycle == 3] <- "Wind Stress Curl Upwelling"
+zhan_proportions$Cycle[zhan_proportions$cycle == 4] <- "Coastal Boundary Upwelling"
+#zhan_proportions$Cycle <- factor(zhan_proportions$Cycle, levels = c("Offshore Stratified","California Current", "Wind Stress Curl Upwelling","Coastal Boundary Upwelling")) #names too long for figure
+zhan_proportions$Cycle <- zhan_proportions$cycle #reassign as numbers
+
+zhan_proportions$Net <- factor(zhan_proportions$Net, levels = c("0-50m", "50-100m", "100-150m", "150-200m", "200-250m", "250-300m", "300-350m", "350-400m"))
+
+
+leray_appendicularians$propbiomass <- leray_appendicularians$sumgroupbiomassugCm3/leray_appendicularians$sumbiomassugCm3
+leray_appendicularians$propabund <- leray_appendicularians$Abundance....m.3./leray_appendicularians$Abundancetotal.m3
 leray_appendicularians$propseqs <- leray_appendicularians$taxprop
-leray_bryozoans$propbiomass <- leray_bryozoans$sumgroupbiomassugCm3/leray_bryozoans$sumbiomassugCm3.x
-leray_bryozoans$propabund <- leray_bryozoans$Abundance....m.3..y/leray_bryozoans$Abundancetotal.m3
+leray_bryozoans$propbiomass <- leray_bryozoans$sumgroupbiomassugCm3/leray_bryozoans$sumbiomassugCm3
+leray_bryozoans$propabund <- leray_bryozoans$Abundance....m.3./leray_bryozoans$Abundancetotal.m3
 leray_bryozoans$propseqs <- leray_bryozoans$taxprop
-leray_chaetognaths$propbiomass <- leray_chaetognaths$sumgroupbiomassugCm3/leray_chaetognaths$sumbiomassugCm3.x
-leray_chaetognaths$propabund <- leray_chaetognaths$Abundance....m.3..y/leray_chaetognaths$Abundancetotal.m3
+leray_chaetognaths$propbiomass <- leray_chaetognaths$sumgroupbiomassugCm3/leray_chaetognaths$sumbiomassugCm3
+leray_chaetognaths$propabund <- leray_chaetognaths$Abundance....m.3./leray_chaetognaths$Abundancetotal.m3
 leray_chaetognaths$propseqs <- leray_chaetognaths$taxprop
-leray_cnidarians$propbiomass <- leray_cnidarians$sumgroupbiomassugCm3/leray_cnidarians$sumbiomassugCm3.x
-leray_cnidarians$propabund <- leray_cnidarians$Abundance....m.3..y/leray_cnidarians$Abundancetotal.m3
+leray_cnidarians$propbiomass <- leray_cnidarians$sumgroupbiomassugCm3/leray_cnidarians$sumbiomassugCm3
+leray_cnidarians$propabund <- leray_cnidarians$Abundance....m.3./leray_cnidarians$Abundancetotal.m3
 leray_cnidarians$propseqs <- leray_cnidarians$taxprop
-leray_calanoids$propbiomass <- leray_calanoids$sumgroupbiomassugCm3/leray_calanoids$sumbiomassugCm3.x
-leray_calanoids$propabund <- leray_calanoids$Abundance....m.3..y/leray_calanoids$Abundancetotal.m3
+leray_calanoids$propbiomass <- leray_calanoids$sumgroupbiomassugCm3/leray_calanoids$sumbiomassugCm3
+leray_calanoids$propabund <- leray_calanoids$Abundance....m.3./leray_calanoids$Abundancetotal.m3
 leray_calanoids$propseqs <- leray_calanoids$taxprop
-leray_eucalanids$propbiomass <- leray_eucalanids$sumgroupbiomassugCm3/leray_eucalanids$sumbiomassugCm3.x
-leray_eucalanids$propabund <- leray_eucalanids$Abundance....m.3..y/leray_eucalanids$Abundancetotal.m3
+leray_eucalanids$propbiomass <- leray_eucalanids$sumgroupbiomassugCm3/leray_eucalanids$sumbiomassugCm3
+leray_eucalanids$propabund <- leray_eucalanids$Abundance....m.3./leray_eucalanids$Abundancetotal.m3
 leray_eucalanids$propseqs <- leray_eucalanids$taxprop
-leray_poecilostomatoids$propbiomass <- leray_poecilostomatoids$sumgroupbiomassugCm3/leray_poecilostomatoids$sumbiomassugCm3.x
-leray_poecilostomatoids$propabund <- leray_poecilostomatoids$Abundance....m.3..y/leray_poecilostomatoids$Abundancetotal.m3
+leray_poecilostomatoids$propbiomass <- leray_poecilostomatoids$sumgroupbiomassugCm3/leray_poecilostomatoids$sumbiomassugCm3
+leray_poecilostomatoids$propabund <- leray_poecilostomatoids$Abundance....m.3./leray_poecilostomatoids$Abundancetotal.m3
 leray_poecilostomatoids$propseqs <- leray_poecilostomatoids$taxprop
-leray_thaliaceans$propbiomass <- leray_thaliaceans$sumgroupbiomassugCm3/leray_thaliaceans$sumbiomassugCm3.x
-leray_thaliaceans$propabund <- leray_thaliaceans$Abundance....m.3..y/leray_thaliaceans$Abundancetotal.m3
+leray_thaliaceans$propbiomass <- leray_thaliaceans$sumgroupbiomassugCm3/leray_thaliaceans$sumbiomassugCm3
+leray_thaliaceans$propabund <- leray_thaliaceans$Abundance....m.3./leray_thaliaceans$Abundancetotal.m3
 leray_thaliaceans$propseqs <- leray_thaliaceans$taxprop
-leray_malacostraca$propbiomass <- leray_malacostraca$sumgroupbiomassugCm3/leray_malacostraca$sumbiomassugCm3.x
-leray_malacostraca$propabund <- leray_malacostraca$Abundance....m.3..y/leray_malacostraca$Abundancetotal.m3
+leray_malacostraca$propbiomass <- leray_malacostraca$sumgroupbiomassugCm3/leray_malacostraca$sumbiomassugCm3
+leray_malacostraca$propabund <- leray_malacostraca$Abundance....m.3./leray_malacostraca$Abundancetotal.m3
 leray_malacostraca$propseqs <- leray_malacostraca$taxprop
-leray_ostracods$propbiomass <- leray_ostracods$sumgroupbiomassugCm3/leray_ostracods$sumbiomassugCm3.x
-leray_ostracods$propabund <- leray_ostracods$Abundance....m.3..y/leray_ostracods$Abundancetotal.m3
+leray_ostracods$propbiomass <- leray_ostracods$sumgroupbiomassugCm3/leray_ostracods$sumbiomassugCm3
+leray_ostracods$propabund <- leray_ostracods$Abundance....m.3./leray_ostracods$Abundancetotal.m3
 leray_ostracods$propseqs <- leray_ostracods$taxprop
-leray_polychaete$propbiomass <- leray_polychaete$sumgroupbiomassugCm3/leray_polychaete$sumbiomassugCm3.x
-leray_polychaete$propabund <- leray_polychaete$Abundance....m.3..y/leray_polychaete$Abundancetotal.m3
+leray_polychaete$propbiomass <- leray_polychaete$sumgroupbiomassugCm3/leray_polychaete$sumbiomassugCm3
+leray_polychaete$propabund <- leray_polychaete$Abundance....m.3./leray_polychaete$Abundancetotal.m3
 leray_polychaete$propseqs <- leray_polychaete$taxprop
-leray_pteropods$propbiomass <- leray_pteropods$sumgroupbiomassugCm3/leray_pteropods$sumbiomassugCm3.x
-leray_pteropods$propabund <- leray_pteropods$Abundance....m.3..y/leray_pteropods$Abundancetotal.m3
+leray_pteropods$propbiomass <- leray_pteropods$sumgroupbiomassugCm3/leray_pteropods$sumbiomassugCm3
+leray_pteropods$propabund <- leray_pteropods$Abundance....m.3./leray_pteropods$Abundancetotal.m3
 leray_pteropods$propseqs <- leray_pteropods$taxprop
-leray_salps$propbiomass <- leray_salps$sumgroupbiomassugCm3/leray_salps$sumbiomassugCm3.x
-leray_salps$propabund <- leray_salps$Abundance....m.3..y/leray_salps$Abundancetotal.m3
+leray_salps$propbiomass <- leray_salps$sumgroupbiomassugCm3/leray_salps$sumbiomassugCm3
+leray_salps$propabund <- leray_salps$Abundance....m.3./leray_salps$Abundancetotal.m3
 leray_salps$propseqs <- leray_salps$euphprop
 
 
@@ -731,900 +763,62 @@ leray_proportions$net <- leray_salps$Net.x
 leray_proportions$percentprocessed <- leray_salps$percentprocessed
 leray_proportions$time <- leray_salps$time
 
+leray_proportions$Net <- NA
+leray_proportions$Net[leray_proportions$net == 1] <- "350-400m"
+leray_proportions$Net[leray_proportions$net == 2] <- "300-350m"
+leray_proportions$Net[leray_proportions$net == 3] <- "250-300m"
+leray_proportions$Net[leray_proportions$net == 4] <- "200-250m"
+leray_proportions$Net[leray_proportions$net == 5] <- "150-200m"
+leray_proportions$Net[leray_proportions$net == 6] <- "100-150m"
+leray_proportions$Net[leray_proportions$net == 7] <- "50-100m"
+leray_proportions$Net[leray_proportions$net == 8] <- "0-50m"
+leray_proportions$Net[leray_proportions$net == 1 && leray_proportions$Cycle == "4"] <- "150-200m"
+leray_proportions$Net[leray_proportions$net == 2 && leray_proportions$Cycle == "4"] <- "150-200m"
+leray_proportions$Net[leray_proportions$net == 3 && leray_proportions$Cycle == "4"] <- "100-150m"
+leray_proportions$Net[leray_proportions$net == 4 && leray_proportions$Cycle == "4"] <- "100-150m"
+leray_proportions$Net[leray_proportions$net == 5 && leray_proportions$Cycle == "4"] <- "50-100m"
+leray_proportions$Net[leray_proportions$net == 6 && leray_proportions$Cycle == "4"] <- "50-100m"
+leray_proportions$Net[leray_proportions$net == 7 && leray_proportions$Cycle == "4"] <- "0-50m"
+leray_proportions$Net[leray_proportions$net == 8 && leray_proportions$Cycle == "4"] <- "0-50m"
 
+leray_proportions$Net <- factor(leray_proportions$Net, levels = c("0-50m", "50-100m", "100-150m", "150-200m", "200-250m", "250-300m", "300-350m", "350-400m"))
+
+leray_proportions$Cycle <- NA
+leray_proportions$Cycle[leray_proportions$cycle == 1] <- "Offshore Stratified"
+leray_proportions$Cycle[leray_proportions$cycle == 2] <- "California Current"
+leray_proportions$Cycle[leray_proportions$cycle == 3] <- "Wind Stress Curl Upwelling"
+leray_proportions$Cycle[leray_proportions$cycle == 4] <- "Coastal Boundary Upwelling"
+#leray_proportions$Cycle <- factor(leray_proportions$Cycle, levels = c("Offshore Stratified","California Current", "Wind Stress Curl Upwelling","Coastal Boundary Upwelling")) #names too long for figure
+leray_proportions$Cycle <- leray_proportions$cycle #reassign as numbers
 ```
 
 
-```{r pretty plot correlations carbon with stats}
 
-appendicularians_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_append", y = "seqs_append", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Appendicularians") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_append, y = seqs_append, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-appendicularians_COI <- ggplot(leray_proportions, aes_string(x = "carbon_append", y = "seqs_append", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Appendicularians") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_append, y = seqs_append, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
+```{r transform}
 
-bryozoans_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_bryozoans", y = "seqs_bryozoans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Bryozoans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-bryozoans_COI <- ggplot(leray_proportions, aes_string(x = "carbon_bryozoans", y = "seqs_bryozoans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Bryozoans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
+leray_proportions_trans <- leray_proportions[,1:39]
+leray_proportions_trans <- asin(sqrt(leray_proportions_trans))
 
-chaetognaths_18s <- ggplot(leray_proportions, aes_string(x = "carbon_chaetognaths", y = "seqs_chaetognaths", shape = "cycle", color = "net")) +
-#   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Chaetognaths") +
-   theme_bw(base_size = 6)+ 
-     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-chaetognaths_COI <- ggplot(leray_proportions, aes_string(x = "carbon_chaetognaths", y = "seqs_chaetognaths", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Chaetognaths") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_chaetognaths, y = seqs_chaetognaths, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
+leray_proportions_trans$cycle           <- leray_proportions$cycle 
+leray_proportions_trans$net             <- leray_proportions$net
+leray_proportions_trans$percenprocessed <- leray_proportions$percentprocessed 
+leray_proportions_trans$time            <- leray_proportions$time
+leray_proportions_trans$Net             <- leray_proportions$Net 
+leray_proportions_trans$Cycle           <- leray_proportions$Cycle
 
-cnidarians_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_cnidarians", y = "seqs_cnidarians", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Cnidarians & Ctenophores") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-cnidarians_COI <- ggplot(leray_proportions, aes_string(x = "carbon_cnidarians", y = "seqs_cnidarians", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Cnidarians & Ctenophores") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
+zhan_proportions_trans <- zhan_proportions[,1:45]
+zhan_proportions_trans <- asin(sqrt(zhan_proportions_trans))
 
-calanoids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Calanoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-calanoids_COI <- ggplot(leray_proportions, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Calanoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-eucalanids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Eucalanids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-eucalanids_COI <- ggplot(leray_proportions, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Eucalanids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-oithona_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_oithona", y = "seqs_oithona", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Oithona") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_oithona, y = seqs_oithona, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-oithona_COI <- ggplot(zhan_proportions, aes_string(x = "carbon_oithona", y = "seqs_oithona", shape = "cycle", color = "net")) +
-#   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Oithona") +
-   theme_bw(base_size = 6)+ 
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
- theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-poecilost_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_poecilost", y = "seqs_poecilost", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Poecilostomatoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_poecilost, y = seqs_poecilost, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-poecilost_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_poecilost", y = "seqs_poecilost", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Poecilostomatoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_poecilost, y = seqs_poecilost, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-doliolids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_doliolids", y = "seqs_doliolids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Doliolids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_doliolids, y = seqs_doliolids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-doliolids_COI <-  ggplot(zhan_proportions, aes_string(x = "carbon_doliolids", y = "seqs_doliolids", shape = "cycle", color = "net")) +
-#   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Doliolids") +
-   theme_bw(base_size = 6)+ 
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
- theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-thaliaceans_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Thaliaceans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-thaliaceans_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Thaliaceans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-malacostraca_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_malacostraca", y = "seqs_malacostraca", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Malacostracans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-malacostraca_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_malacostraca", y = "seqs_malacostraca", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Malacostracans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-ostracods_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Ostracods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-ostracods_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Ostracods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-polychaetes_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_polychaetes", y = "seqs_polychaetes", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Polychaetes") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-polychaetes_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_polychaetes", y = "seqs_polychaetes", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Polychaetes") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-pteropods_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_pteropods", y = "seqs_pteropods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Pteropods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_pteropods, y = seqs_pteropods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-pteropods_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_pteropods", y = "seqs_pteropods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Pteropods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_pteropods, y = seqs_pteropods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-pyrosomes_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_pyrosomes", y = "seqs_pyrosomes", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Pyrosomes") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_pyrosomes, y = seqs_pyrosomes, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-pyrosomes_COI <-  ggplot(zhan_proportions, aes_string(x = "carbon_pyrosomes", y = "seqs_pyrosomes", shape = "cycle", color = "net")) +
-  # geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Pyrosomes") +
-   theme_bw(base_size = 6)+ 
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
- theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-salps_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_salps", y = "seqs_salps", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Salps") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_salps, y = seqs_salps, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-salps_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_salps", y = "seqs_salps", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Salps") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_salps, y = seqs_salps, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-
-
-pdf("plots/FigureS1_v2-2020-11-17.pdf", width=7.5,height=10)
-grid.arrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, nrow = 4)
-grid.arrange(calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, nrow = 4)
-grid.arrange(doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, nrow = 4)
-grid.arrange(polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 4)
-dev.off()
- 
-
-pdf("plots/FigureS1_v2-2020-11-17_1pg.pdf", width=8.5,height=11)
-grid.arrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 8)
-dev.off()
-```
-
-
-```{r pretty plot correlations abundance with stats}
-
-appendicularians_18s <- ggplot(zhan_proportions, aes_string(x = "abund_append", y = "seqs_append" , shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Appendicularians") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_append, y = seqs_append, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-appendicularians_COI <- ggplot(leray_proportions, aes_string(x = "abund_append", y = "seqs_append", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Appendicularians") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_append, y = seqs_append, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-bryozoans_18s <- ggplot(zhan_proportions, aes_string(x = "abund_bryozoans", y = "seqs_bryozoans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Bryozoans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-bryozoans_COI <- ggplot(leray_proportions, aes_string(x = "abund_bryozoans", y = "seqs_bryozoans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Bryozoans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-chaetognaths_18s <- ggplot(leray_proportions, aes_string(x = "abund_chatognaths", y = "seqs_chaetognaths", shape = "cycle", color = "net")) +
-#   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Chaetognaths") +
-   theme_bw(base_size = 6)+ 
-     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  theme(legend.position = "none") +
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-chaetognaths_COI <- ggplot(leray_proportions, aes_string(x = "abund_chatognaths", y = "seqs_chaetognaths", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Chaetognaths") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_chatognaths, y = seqs_chaetognaths, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-cnidarians_18s <- ggplot(zhan_proportions, aes_string(x = "abund_cnidarians", y = "seqs_cnidarians", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Cnidarians & Ctenophores") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-cnidarians_COI <- ggplot(leray_proportions, aes_string(x = "abund_cnidarians", y = "seqs_cnidarians", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Cnidarians & Ctenophores") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-calanoids_18s <- ggplot(zhan_proportions, aes_string(x = "abund_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Calanoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_calanoids, y = seqs_calanoids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-calanoids_COI <- ggplot(leray_proportions, aes_string(x = "abund_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Calanoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_calanoids, y = seqs_calanoids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-eucalanids_18s <- ggplot(zhan_proportions, aes_string(x = "abund_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Eucalanids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-eucalanids_COI <- ggplot(leray_proportions, aes_string(x = "abund_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Eucalanids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-oithona_18s <- ggplot(zhan_proportions, aes_string(x = "abund_oithona", y = "seqs_oithona", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Oithona") +
-   theme_bw(base_size = 6) + 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_oithona, y = seqs_oithona, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-oithona_COI <- ggplot(zhan_proportions, aes_string(x = "abund_oithona", y = "seqs_oithona", shape = "cycle", color = "net")) +
-#   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Oithona") +
-   theme_bw(base_size = 6)+ 
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
- theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-poecilost_18s <- ggplot(zhan_proportions, aes_string(x = "abund_poecilost", y = "seqs_poecilost", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Poecilostomatoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_poecilost, y = seqs_poecilost, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-poecilost_COI <-  ggplot(leray_proportions, aes_string(x = "abund_poecilost", y = "seqs_poecilost", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Poecilostomatoids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_poecilost, y = seqs_poecilost, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-doliolids_18s <- ggplot(zhan_proportions, aes_string(x = "abund_doliolids", y = "seqs_doliolids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Doliolids") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_doliolids, y = seqs_doliolids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-doliolids_COI <-  ggplot(zhan_proportions, aes_string(x = "abund_doliolids", y = "seqs_doliolids", shape = "cycle", color = "net")) +
-#   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Doliolids") +
-   theme_bw(base_size = 6)+ 
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
- theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-thaliaceans_18s <- ggplot(zhan_proportions, aes_string(x = "abund_thaliaceans", y = "seqs_thaliaceans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Thaliaceans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-thaliaceans_COI <-  ggplot(leray_proportions, aes_string(x = "abund_thaliaceans", y = "seqs_thaliaceans", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Thaliaceans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-malacostraca_18s <- ggplot(zhan_proportions, aes_string(x = "abund_malacostraca", y = "seqs_malacostraca", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Malacostracans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-malacostraca_COI <-  ggplot(leray_proportions, aes_string(x = "abund_malacostraca", y = "seqs_malacostraca", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Malacostracans") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-ostracods_18s <- ggplot(zhan_proportions, aes_string(x = "abund_ostracods", y = "seqs_ostracods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Ostracods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_ostracods, y = seqs_ostracods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-ostracods_COI <-  ggplot(leray_proportions, aes_string(x = "abund_ostracods", y = "seqs_ostracods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Ostracods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_ostracods, y = seqs_ostracods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-polychaetes_18s <- ggplot(zhan_proportions, aes_string(x = "abund_polychaetes", y = "seqs_polychaetes", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Polychaetes") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-polychaetes_COI <-  ggplot(leray_proportions, aes_string(x = "abund_polychaetes", y = "seqs_polychaetes", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Polychaetes") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-pteropods_18s <- ggplot(zhan_proportions, aes_string(x = "abund_pteropods", y = "seqs_pteropods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Pteropods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_pteropods, y = seqs_pteropods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-pteropods_COI <-  ggplot(leray_proportions, aes_string(x = "abund_pteropods", y = "seqs_pteropods", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Pteropods") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_pteropods, y = seqs_pteropods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-pyrosomes_18s <- ggplot(zhan_proportions, aes_string(x = "abund_pyrosomes", y = "seqs_pyrosomes", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Pyrosomes") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none")+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_pyrosomes, y = seqs_pyrosomes, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-pyrosomes_COI <-  ggplot(zhan_proportions, aes_string(x = "abund_pyrosomes", y = "seqs_pyrosomes", shape = "cycle", color = "net")) +
-  # geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Pyrosomes") +
-   theme_bw(base_size = 6)+ 
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
- theme(legend.position = "none")+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-salps_18s <- ggplot(zhan_proportions, aes_string(x = "abund_salps", y = "seqs_salps", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Salps") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = abund_salps, y = seqs_salps, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-salps_COI <-  ggplot(leray_proportions, aes_string(x = "abund_salps", y = "seqs_salps", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion abundance") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Salps") +
-   theme_bw(base_size = 6)+ 
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = abund_salps, y = seqs_salps, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))
-
-tiff("plots/FigureS2p1_v1-2020-10-26.tiff", width=170,height=340, units = "mm", res = 300)
-grid.arrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, nrow = 4)
-dev.off()
-
-tiff("plots/FigureS2p2_v1-2020-10-26.tiff", width=170,height=340, units = "mm", res = 300)
-grid.arrange(calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, nrow = 4)
-dev.off()
-
-tiff("plots/FigureS2p3_v1-2020-10-26.tiff", width=170,height=340, units = "mm", res = 300)
-grid.arrange(doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, nrow = 4)
-dev.off()
- 
-tiff("plots/FigureS2p4_v1-2020-10-26.tiff", width=170,height=340, units = "mm", res = 300)
-grid.arrange(polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 4)
-dev.off()
- 
-pdf("plots/FigureS2_v2-2020-10-26.pdf", width=7.5,height=10)
-grid.arrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, nrow = 4)
-grid.arrange(calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, nrow = 4)
-grid.arrange(doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, nrow = 4)
-grid.arrange(polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 4)
-dev.off()
-
-pdf("plots/FigureS2_v2-2020-10-26_1pg.pdf", width=7.5,height=10)
-grid.arrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 8)
-dev.off()
-
-
-```
-
-```{r are outliers day or night?}
-eucalanids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Eucalanids") +
-   theme_bw() +
-  facet_wrap(~time)
-eucalanids_COI <- ggplot(leray_proportions, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Eucalanids") +
-   theme_bw()+
-  facet_wrap(~time)
-calanoids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Calanoids") +
-   theme_bw() +
-  facet_wrap(~time)
-calanoids_COI <- ggplot(leray_proportions, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point() +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Calanoids") +
-   theme_bw() +
-  facet_wrap(~time)
-
-eucalanids_18s
-eucalanids_COI
-calanoids_18s
-calanoids_COI
+zhan_proportions_trans$cycle           <- zhan_proportions$cycle 
+zhan_proportions_trans$net             <- zhan_proportions$net
+zhan_proportions_trans$percenprocessed <- zhan_proportions$percentprocessed 
+zhan_proportions_trans$time            <- zhan_proportions$time
+zhan_proportions_trans$Net             <- zhan_proportions$Net 
+zhan_proportions_trans$Cycle           <- zhan_proportions$Cycle
 
 
 
 ```
-
-
 
 
 ```{r zhan run correlations into df}
@@ -1643,22 +837,22 @@ for (i in c(1:15)){
   carbon <- i
   abundance <- i+15
   sequences <- i+30
-  zhan_names[[i]] <- names(zhan_proportions)[sequences]
+  zhan_names[[i]] <- names(zhan_proportions_trans)[sequences]
     
-  mod <- cor.test(x = zhan_proportions[,carbon], y = zhan_proportions[,sequences], method = "spearman")
+  mod <- cor.test(x = zhan_proportions_trans[,carbon], y = zhan_proportions_trans[,sequences], method = "pearson", exact = T)
   zhan_carb_rsquare[[i]] <- mod$estimate
   zhan_carb_pval[[i]] <-    mod$p.value
 
-  mod <- cor.test(x = zhan_proportions[,abundance], y = zhan_proportions[,sequences], method = "spearman")
+  mod <- cor.test(x = zhan_proportions_trans[,abundance], y = zhan_proportions_trans[,sequences], method = "pearson", exact = T)
   zhan_ab_rsquare[[i]] <- mod$estimate
   zhan_ab_pval[[i]] <- mod$p.value
 
-  zhan_mean_ab[[i]] <- mean(zhan_proportions[,abundance])
-zhan_mean_carb[[i]] <- mean(zhan_proportions[,carbon])
-zhan_mean_seq[[i]] <- mean(zhan_proportions[,sequences])
-  zhan_median_ab[[i]] <- median(zhan_proportions[,abundance])
-zhan_median_carb[[i]] <- median(zhan_proportions[,carbon])
-zhan_median_seq[[i]] <- median(zhan_proportions[,sequences])
+  zhan_mean_ab[[i]] <- mean(zhan_proportions_trans[,abundance])
+zhan_mean_carb[[i]] <- mean(zhan_proportions_trans[,carbon])
+zhan_mean_seq[[i]] <- mean(zhan_proportions_trans[,sequences])
+  zhan_median_ab[[i]] <- median(zhan_proportions_trans[,abundance])
+zhan_median_carb[[i]] <- median(zhan_proportions_trans[,carbon])
+zhan_median_seq[[i]] <- median(zhan_proportions_trans[,sequences])
 }
 
 
@@ -1698,23 +892,23 @@ for (i in 1:13){
   carbon <- i
   abundance <- i+13
   sequences <- i+26
-  leray_names[[i]] <- names(leray_proportions)[sequences]
+  leray_names[[i]] <- names(leray_proportions_trans)[sequences]
   
-  mod <- cor.test(x = leray_proportions[,carbon], y = leray_proportions[,sequences], method = "spearman")
+  mod <- cor.test(x = leray_proportions_trans[,carbon], y = leray_proportions_trans[,sequences], method = "pearson", exact = T)
   leray_carb_rsquare[[i]] <- mod$estimate
   leray_carb_pval[[i]] <-    mod$p.value
 
-  mod <- cor.test(x = leray_proportions[,abundance], y = leray_proportions[,sequences], method = "spearman")
+  mod <- cor.test(x = leray_proportions_trans[,abundance], y = leray_proportions_trans[,sequences], method = "pearson", exact = T)
   leray_ab_rsquare[[i]] <- mod$estimate
   leray_ab_pval[[i]] <-    mod$p.value
 
   
-leray_mean_ab[[i]] <- mean(leray_proportions[,abundance])
-leray_mean_carb[[i]] <- mean(leray_proportions[,carbon])
-leray_mean_seq[[i]] <- mean(leray_proportions[,sequences])
-leray_median_ab[[i]] <- median(leray_proportions[,abundance])
-leray_median_carb[[i]] <- median(leray_proportions[,carbon])
-leray_median_seq[[i]] <- median(leray_proportions[,sequences])
+leray_mean_ab[[i]] <- mean(leray_proportions_trans[,abundance])
+leray_mean_carb[[i]] <- mean(leray_proportions_trans[,carbon])
+leray_mean_seq[[i]] <- mean(leray_proportions_trans[,sequences])
+leray_median_ab[[i]] <- median(leray_proportions_trans[,abundance])
+leray_median_carb[[i]] <- median(leray_proportions_trans[,carbon])
+leray_median_seq[[i]] <- median(leray_proportions_trans[,sequences])
 }
 
 leray_carb_pval_df <- data.frame(unlist(leray_carb_pval))
@@ -1736,19 +930,50 @@ leray_ab_pval_df$medianseq <- unlist(leray_median_seq)
 
 ```
 
-```{r plot coi and 18s together}
-leray_carb_pval_df$marker <- rep("COI")
-zhan_carb_pval_df$marker <- rep("18S")
-colnames(leray_carb_pval_df) <- c("pvalue", "taxon", "rho", "meancarb", "meanseq", "mediancarb", "medianseq", "marker")
-colnames(zhan_carb_pval_df) <- c("pvalue", "taxon", "rho",  "meancarb", "meanseq", "mediancarb ", "medianseq", "marker")
+
+
+
+```{r}
 leray_ab_pval_df$marker <- rep("COI")
 zhan_ab_pval_df$marker <- rep("18S")
-colnames(leray_ab_pval_df) <- c("pvalue", "taxon", "rho", "meanab", "meanseq", "medianab", "medianseq",  "marker")
-colnames(zhan_ab_pval_df) <- c("pvalue", "taxon", "rho", "meanab", "meanseq", "medianab", "medianseq",  "marker")
+colnames(leray_ab_pval_df) <- c("pvalue", "taxon", "rho", "meanvar", "meanseq", "medianvar", "medianseq", "marker")
+colnames(zhan_ab_pval_df) <- c("pvalue", "taxon", "rho", "meanvar", "meanseq", "medianvar", "medianseq", "marker")
 bothmarkers_ab_df <- rbind(leray_ab_pval_df, zhan_ab_pval_df)
-
-
+leray_carb_pval_df$marker1 <- rep("COI")
+zhan_carb_pval_df$marker1 <- rep("18S")
+colnames(leray_carb_pval_df) <- c("pvalue", "taxon", "rho", "meanvar", "meanseq", "medianvar", "medianseq", "marker")
+colnames(zhan_carb_pval_df) <- c("pvalue", "taxon", "rho", "meanvar", "meanseq", "medianvar", "medianseq", "marker")
 bothmarkers_carb_df <- rbind(leray_carb_pval_df, zhan_carb_pval_df)
+
+bothmarkers_ab_df$variable <- rep("Abundance")
+bothmarkers_carb_df$variable <- rep("Carbon")
+
+bothmarkers_alldata <- rbind(bothmarkers_ab_df, bothmarkers_carb_df)
+bothmarkers_alldata$significance <- "NS"
+bothmarkers_alldata$significance[bothmarkers_alldata$pvalue < 0.05] <- "Significant"
+bothmarkers_alldata$significance[bothmarkers_alldata$pvalue < 0.01] <- "Highly Significant"
+bothmarkers_alldata$significance[bothmarkers_alldata$pvalue < 0.001] <- "Extremely Significant"
+
+
+write.csv(bothmarkers_alldata, file = "calculated_correlations_v1_2020-10-26_rev1.csv")
+
+```
+
+
+
+```{r plot coi and 18s together}
+# leray_carb_pval_df$marker <- rep("COI")
+# zhan_carb_pval_df$marker <- rep("18S")
+# colnames(leray_carb_pval_df) <- c("pvalue", "taxon", "rho", "meancarb", "meanseq", "mediancarb", "medianseq", "marker")
+# colnames(zhan_carb_pval_df) <- c("pvalue", "taxon", "rho", "meancarb", "meanseq", "mediancarb", "medianseq", "marker")
+# leray_ab_pval_df$marker <- rep("COI")
+# zhan_ab_pval_df$marker <- rep("18S")
+# colnames(leray_ab_pval_df) <- c("pvalue", "taxon", "rho", "meanab", "meanseq", "medianab", "medianseq",  "marker")
+# colnames(zhan_ab_pval_df) <- c("pvalue", "taxon", "rho", "meanab", "meanseq", "medianab", "medianseq",  "marker")
+# bothmarkers_ab_df <- rbind(leray_ab_pval_df, zhan_ab_pval_df)
+# 
+# 
+# bothmarkers_carb_df <- rbind(leray_carb_pval_df, zhan_carb_pval_df)
 bothmarkers_carb_df$taxon_human <- c("Appendicularians", "Bryozoans", "Chaetognaths", "Cnidarians &\n Ctenophores", "Calanoids", "Eucalanids", "Poecilostomatoids", "Thaliaceans", "Malacostracans", "Ostracods", "Polychaetes", "Pteropods", "Salps", "Appendicularians", "Bryozoans", "Cnidarians &\n Ctenophores", "Calanoids", "Eucalanids", "Cyclopoids", "Poecilostomatoids", "Doliolids", "Thaliaceans", "Malacostracans", "Ostracods", "Polychaetes", "Pteropods", "Pyrosomes", "Salps")
 
 bothmarkers_carb_df$category <- c("Tunicates", "Other", "Chaetognaths", "Other", "Crustaceans", "Crustaceans", "Crustaceans", "Tunicates", "Crustaceans", "Crustaceans", "Other", "Other", "Tunicates", "Tunicates", "Other", "Other", "Crustaceans", "Crustaceans", "Crustaceans", "Crustaceans", "Tunicates", "Tunicates", "Crustaceans", "Crustaceans", "Other", "Other", "Tunicates", "Tunicates")
@@ -1760,12 +985,12 @@ bothmarkers_carb_df$category <- factor(bothmarkers_carb_df$category, levels = c(
 
 
 p <- ggplot(bothmarkers_carb_df[bothmarkers_carb_df$pvalue < 0.05,], aes(x = taxon_human, y = rho, color = marker, shape = marker)) + 
-  geom_point(size = 0.8) +
+  geom_point(size = 1.8) +
   guides(size = FALSE, color=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
+                 keyheight=3.5,
                  default.unit="mm"), 
           shape=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
+                 keyheight=3.5,
                  default.unit="mm"),
          legend.key = element_rect(size = 2.5, fill = "white", colour = NA)) +
 #  ggtitle("Rho values of significant correlations (% Seqs : % Carbon)") +
@@ -1773,16 +998,17 @@ p <- ggplot(bothmarkers_carb_df[bothmarkers_carb_df$pvalue < 0.05,], aes(x = tax
   ylab("Rho") + 
   scale_color_brewer(palette = "Set1") +
   labs(colour = "Marker", shape = "Marker") +
-  theme_bw(base_size = 7) +
+  theme_bw(base_size = 11) +
   theme(axis.text.x = element_text(angle = 90)) + # + theme(legend.position = "none") +
 facet_wrap(.~category, scales = "free_x", nrow = 1) + 
   ylim(c(0,1)) + 
-  theme(axis.text.x = element_text(color = "black", size = 6,
+  theme(axis.text.x = element_text(color = "black", size = 8,
         hjust = 0.95,
         vjust = .50),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10))
+p
 
 ##ok now reformat so that each facet is proportion to the number of factors within it
 # convert ggplot object to grob object
@@ -1797,7 +1023,7 @@ x.var <- sapply(ggplot_build(p)$layout$panel_scales_x,
 gp$widths[facet.columns] <- gp$widths[facet.columns] * x.var
 # plot result
 grid::grid.draw(gp)
-tiff('~/Documents/Chapter4/Oct2020_ICES/plots/Figure6_v1_2020-11-17.tiff', width=85,height=60, units = "mm", res = 300) 
+tiff('~/Documents/Chapter4/Oct2020_ICES/plots/Figure6_v1_2020-11-17_Rev1.tiff', width=170,height=85, units = "mm", res = 300) 
 grid::grid.draw(gp)
 dev.off()
 
@@ -1808,255 +1034,22 @@ dev.off()
 
 
 ```{r}
-leray_ab_pval_df$marker <- rep("COI")
-zhan_ab_pval_df$marker <- rep("18S")
-colnames(leray_ab_pval_df) <- c("pvalue", "taxon", "rho", "marker")
-colnames(zhan_ab_pval_df) <- c("pvalue", "taxon", "rho", "marker")
-bothmarkers_ab_df <- rbind(leray_ab_pval_df, zhan_ab_pval_df)
-leray_carb_pval_df$marker <- rep("COI")
-zhan_carb_pval_df$marker <- rep("18S")
-colnames(leray_carb_pval_df) <- c("pvalue", "taxon", "rho", "marker")
-colnames(zhan_carb_pval_df) <- c("pvalue", "taxon", "rho", "marker")
-bothmarkers_carb_df <- rbind(leray_carb_pval_df, zhan_carb_pval_df)
-
-bothmarkers_ab_df$variable <- rep("Abundance")
-bothmarkers_carb_df$variable <- rep("Carbon")
-
-bothmarkers_alldata <- rbind(bothmarkers_ab_df, bothmarkers_carb_df)
-bothmarkers_alldata$significance <- "NS"
-bothmarkers_alldata$significance[bothmarkers_alldata$pvalue < 0.05] <- "Significant"
-bothmarkers_alldata$significance[bothmarkers_alldata$pvalue < 0.01] <- "Highly Significant"
-bothmarkers_alldata$significance[bothmarkers_alldata$pvalue < 0.001] <- "Extremely Significant"
 
 
-write.csv(bothmarkers_alldata, file = "calculated_correlations_v1_2020-10-26.csv")
+zhan_sig_ab <- zhan_ab_pval_df[zhan_ab_pval_df$pvalue < 0.05/56,]
+cor.test(x = zhan_sig_ab$meanvar, y = zhan_sig_ab$rho, method = "spearman")
 
-```
-
-
-```{r pretty plot Fig 7}
-
-calanoids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net" )) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Calanoids") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01)) +
-  xlim(0,1) + 
-  ylim(0,1)
-
-
-calanoids_COI <- ggplot(leray_proportions, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "cycle", color = "net")) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Calanoids") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01))+
-  xlim(0,1) + 
-  ylim(0,1)
-
-
-eucalanids_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net" )) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Eucalanids") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01))+
-  xlim(0,1) + 
-  ylim(0,1)
-
-eucalanids_COI <- ggplot(leray_proportions, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "cycle", color = "net")) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Eucalanids") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01))+
-  xlim(0,1) + 
-  ylim(0,1)
-
-
-
-thaliaceans_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "cycle", color = "net")) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Thaliaceans") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01)) +
-  xlim(0,1) + 
-  ylim(0,1)
-
-thaliaceans_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "cycle", color = "net")) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Thaliaceans") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01))+
-  xlim(0,1) + 
-  ylim(0,.01)
-
-
-
-
-ostracods_18s <- ggplot(zhan_proportions, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "cycle", color = "net")) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("18S Ostracods") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_proportions, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6))+ scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01))+
-  xlim(0,.01) + 
-  ylim(0,.01)
-
-ostracods_COI <-  ggplot(leray_proportions, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "cycle", color = "net")) +
-   geom_point(size = 0.8) +
-   xlab("Proportion carbon") +
-   ylab("Proportion sequences") +
-   ggtitle("COI Ostracods") +
-   theme_bw(base_size = 6)+
-  theme(legend.position = "none") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = leray_proportions, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  theme(axis.text.x = element_text(color = "black", size = 5),
-        axis.text.y = element_text(color = "black", size = 5),  
-        axis.title.x = element_text(color = "black", size = 6),
-        axis.title.y = element_text(color = "black", size = 6)) + scale_y_continuous(
-  labels = scales::number_format(accuracy = 0.01))+
-  xlim(0,.01) + 
-  ylim(0,.01)
-
-
-tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure7_v2-2020-11-17.tiff", width=85,height=120, units = "mm", res = 300)
-grid.arrange(calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, thaliaceans_COI, thaliaceans_18s, ostracods_COI, ostracods_18s, nrow = 4)
-dev.off()
-
-
-tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure7_v2-2020-11-17_legend.tiff", width=85,height=220, units = "mm", res = 300)
-grid.arrange(calanoids_COI+
-  theme(legend.position = "right") + 
-  guides(size = FALSE, color=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
-                 default.unit="mm"), 
-          shape=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
-                 default.unit="mm"),
-         legend.key = element_rect(size = 2.5, fill = "white", colour = NA)) +
-    labs(color = "Net") +
-    labs(shape = "Cycle"), calanoids_18s, eucalanids_COI, eucalanids_18s, thaliaceans_COI, thaliaceans_18s, ostracods_COI, ostracods_18s, nrow = 4)
-dev.off()
-
-
-```
-
-
-```{r}
-
-ggplot(zhan_ab_pval_df[zhan_ab_pval_df$unlist.zhan_ab_pval. < 0.05,], aes(x = meanab, y = rho, color = taxon)) + 
-  geom_point()+
-  ggtitle("18S: Rho vs Average % Abundance") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Abundance") +
-  ylab("Rho (Abundance vs Seqs)")+
-  ylim(0,1)
-ggplot(zhan_carb_pval_df[zhan_carb_pval_df$unlist.zhan_carb_pval. < 0.05,], aes(x = meancarb, y = rho, color = taxon)) + 
-  geom_point()+
-  ggtitle("18S: Rho vs Average % Carbon") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Carbon") +
-  ylab("Rho (Carbon vs Seqs)")+
-  ylim(0,1)
-ggplot(zhan_carb_pval_df[zhan_carb_pval_df$unlist.zhan_carb_pval. < 0.05,], aes(x = meanseq, y = rho, color = taxon)) + 
-  geom_point()+
-  ggtitle("18S: Rho vs Average % Seqs") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Sequences") +
-  ylab("Rho (Carbon vs Seqs)")+
-  ylim(0,1)
-
-
-ggplot(leray_ab_pval_df[leray_ab_pval_df$unlist.leray_ab_pval. < 0.05,], aes(x = meanab, y = rho, color = taxon)) + 
-  geom_point()+
-  ggtitle("COI: Rho vs Average % Abundance") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Abundance") +
-  ylab("Rho (Abundance vs Seqs)")+
-  ylim(0,1)
-ggplot(leray_carb_pval_df[leray_carb_pval_df$unlist.leray_carb_pval. < 0.05,], aes(x = meancarb, y = rho, color = taxon)) + 
-  geom_point()+
-  ggtitle("COI: Rho vs Average % Carbon") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Carbon") +
-  ylab("Rho (Carbon vs Seqs)")+
-  ylim(0,1)
-ggplot(leray_carb_pval_df[leray_carb_pval_df$unlist.leray_carb_pval. < 0.05,], aes(x = meanseq, y = rho, color = taxon)) + 
-  geom_point()+
-  ggtitle("COI: Rho vs Average % Seqs") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Sequences") +
-  ylab("Rho (Carbon vs Seqs)")+
-  ylim(0,1)
-
-
-zhan_sig_ab <- zhan_ab_pval_df[zhan_ab_pval_df$pvalue < 0.05,]
-cor.test(x = zhan_sig_ab$meanab, y = zhan_sig_ab$rho, method = "spearman")
-
-zhan_sig_carb <- zhan_carb_pval_df[zhan_carb_pval_df$pvalue < 0.05,]
-cor.test(x = zhan_sig_carb$meancarb, y = zhan_sig_carb$rho, method = "spearman")
+zhan_sig_carb <- zhan_carb_pval_df[zhan_carb_pval_df$pvalue < 0.05/56,]
+cor.test(x = zhan_sig_carb$meanvar, y = zhan_sig_carb$rho, method = "spearman")
 cor.test(x = zhan_sig_carb$meanseq, y = zhan_sig_carb$rho, method = "spearman")
 
 
 
-leray_sig_ab <- leray_ab_pval_df[leray_ab_pval_df$pvalue < 0.05,]
-cor.test(x = leray_sig_ab$meanab, y = leray_sig_ab$rho, method = "spearman")
+leray_sig_ab <- leray_ab_pval_df[leray_ab_pval_df$pvalue < 0.05/56,]
+cor.test(x = leray_sig_ab$meanvar, y = leray_sig_ab$rho, method = "spearman")
 
-leray_sig_carb <- leray_carb_pval_df[leray_carb_pval_df$pvalue < 0.05,]
-cor.test(x = leray_sig_carb$meancarb, y = leray_sig_carb$rho, method = "spearman")
+leray_sig_carb <- leray_carb_pval_df[leray_carb_pval_df$pvalue < 0.05/56,]
+cor.test(x = leray_sig_carb$meanvar, y = leray_sig_carb$rho, method = "spearman")
 cor.test(x = leray_sig_carb$meanseq, y = leray_sig_carb$rho, method = "spearman")
 
 
@@ -2076,6 +1069,9 @@ zhan_carb_pval_df$taxon[zhan_carb_pval_df$taxon == "seqs_pteropods"] <- "Pteropo
 zhan_carb_pval_df$taxon[zhan_carb_pval_df$taxon == "seqs_pyrosomes"] <- "Pyrosomes"
 zhan_carb_pval_df$taxon[zhan_carb_pval_df$taxon == "seqs_salps"] <- "Salps"
 zhan_carb_pval_df$taxon[zhan_carb_pval_df$taxon == "seqs_thaliaceans"] <- "Thaliaceans"
+zhan_carb_pval_df$taxon[zhan_carb_pval_df$taxon == "seqs_poecilost"] <- "Poecilostomatoids"
+zhan_carb_pval_df$taxon[zhan_carb_pval_df$taxon == "seqs_chaetognaths"] <- "Chaetognaths"
+
 
 leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_append"] <- "Appendicularians"
 leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_bryozoans"] <- "Bryozoans"
@@ -2089,87 +1085,1436 @@ leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_polychaetes"] <- "Pol
 leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_pteropods"] <- "Pteropods"
 leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_salps"] <- "Salps"
 leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_thaliaceans"] <- "Thaliaceans"
+leray_carb_pval_df$taxon[leray_carb_pval_df$taxon == "seqs_chaetognaths"] <- "Chaetognaths"
 
 
-p1 <- ggplot(zhan_carb_pval_df[zhan_carb_pval_df$pvalue < 0.05,], aes(x = meanseq, y = rho, color = taxon)) + 
-  geom_point(size = 0.8)+
- theme_bw(base_size = 7) +
-  ggtitle("18S: Rho vs Average % Seqs") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Sequences") +
-  ylab("Rho (Carbon vs Seqs)")+
-  ylim(0,1)+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_carb_pval_df[zhan_carb_pval_df$unlist.zhan_carb_pval. < 0.05,], aes(x = meanseq, y = rho, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  guides(size = FALSE, color=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
-                 default.unit="mm"), 
-          shape=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
-                 default.unit="mm"),
-         legend.key = element_rect(size = 2.5, fill = "white", colour = NA))+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7),
-        legend.spacing.y = unit(1.0, 'mm'))
-#p1$labels$label$aes_params$textsize <- 6
+# p1 <- ggplot(zhan_carb_pval_df[zhan_carb_pval_df$pvalue < 0.05,], aes(x = meanseq, y = rho, color = taxon)) + 
+#   geom_point(size = 0.8)+
+#  theme_bw(base_size = 7) +
+# #  ggtitle("18S: Rho vs Average % Seqs") +
+#   theme(axis.text.x = element_text(angle = 90)) +
+#   xlab("Average % Sequences") +
+#   ylab("Rho (Carbon vs Seqs)")+
+#   ylim(0,1)+
+#   stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho", data = zhan_carb_pval_df[zhan_carb_pval_df$unlist.zhan_carb_pval. < 0.05,], aes(x = meanseq, y = rho, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
+#   guides(size = FALSE, color=guide_legend(keywidth=2.5,
+#                  keyheight=2.5,
+#                  default.unit="mm"), 
+#           shape=guide_legend(keywidth=2.5,
+#                  keyheight=2.5,
+#                  default.unit="mm"),
+#          legend.key = element_rect(size = 2.5, fill = "white", colour = NA))+ 
+#   theme(axis.text.x = element_text(color = "black", size = 7),
+#         axis.text.y = element_text(color = "black", size = 7),  
+#         axis.title.x = element_text(color = "black", size = 9),
+#         axis.title.y = element_text(color = "black", size = 9),
+#         legend.spacing.y = unit(1.0, 'mm'))
+# #p1$labels$label$aes_params$textsize <- 6
 
-p2 <- ggplot(leray_carb_pval_df[leray_carb_pval_df$pvalue < 0.05,], aes(x = meanseq, y = rho, color = taxon)) + 
-  geom_point(size = 0.8)+
- theme_bw(base_size = 7) +
-  ggtitle("COI: Rho vs Average % Seqs") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Sequences") +
-  ylab("Rho (Carbon vs Seqs)")+
-  ylim(0,1)+
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho",  data = leray_carb_pval_df[leray_carb_pval_df$unlist.leray_carb_pval. < 0.05,], aes(x = meanseq, y = rho, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
-  guides(size = FALSE, color=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
-                 default.unit="mm"), 
-          shape=guide_legend(keywidth=2.5,
-                 keyheight=2.5,
-                 default.unit="mm"),
-         legend.key = element_rect(size = 2.5, fill = "white", colour = NA))+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7),
-        legend.spacing.y = unit(1.0, 'mm'))
+xgfs_normal12 = c(rgb(235/255, 172/255, 35/255), rgb(184/255, 0/255, 88/255), rgb(0/255, 140/255, 249/255), rgb(0/255, 110/255, 0/255), rgb(0/255, 187/255, 173/255), rgb(209/255, 99/255, 230/255), rgb(178/255, 69/255, 2/255), rgb(255/255, 146/255, 135/255), rgb(89/255, 84/255, 214/255), rgb(0/255, 198/255, 248/255), rgb(135/255, 133/255, 0/255), rgb(0/255, 167/255, 108/255),"#e1562c", rgb(189/255, 189/255, 189/255), "#000000", "#808080")
 
-tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure8_v2-2020-11-17.tiff", width=170,height=60, units = "mm", res = 300)
-grid.arrange(p2, p1, nrow = 1)
-dev.off()
-
-leray_carb_pval_df$marker <- "COI"
-zhan_carb_pval_df$marker <- "18S"
+leray_carb_pval_df$Marker <- "COI"
+zhan_carb_pval_df$Marker <- "18S"
 both_pval <- rbind(leray_carb_pval_df, zhan_carb_pval_df)
 both_pval$Marker <- factor(both_pval$marker, levels = c("COI", "18S"))
-p3 <- ggplot(both_pval[both_pval$pvalue < 0.05,], aes(x = meanseq, y = rho, color = taxon)) + 
-  geom_point(size = 0.8)+
- theme_bw(base_size = 7) +
-  ggtitle("COI: Rho vs Average % Seqs") +
+#both_pval$percmeanseqnum <- both_pval$meanseq * 100
+
+both_pval_sig <- both_pval#[both_pval$pvalue < (0.05/56),]
+p3 <- ggplot(both_pval_sig, aes(x = meanseq, y = rho, color = taxon)) + 
+  geom_point(size = 1.9)+
+ theme_bw(base_size = 12) +
+#  ggtitle("COI: Rho vs Average Proportion Seqs") +
   theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Average % Sequences") +
-  ylab("Rho (Carbon vs Seqs)")+
+  xlab("Mean proportion sequences (arcsine square-root) ") +
+  ylab("R (Carbon vs Seqs)")+
   ylim(0,1)+
   labs(color = "Taxon") +
-  stat_cor(size = 2, inherit.aes = F, method = "spearman", cor.coef.name = "rho",  data = both_pval[both_pval$pvalue < 0.05,], aes(x = meanseq, y = rho, label = paste(..r.label.., ..p.label.., sep = "~`,`~")))+ 
+  stat_cor(size = 3, label.x.npc = 0.35, label.y.npc = 0.1, inherit.aes = F, method = "spearman", cor.coef.name = "rho",  data = both_pval_sig, aes(x = meanseq, y = rho, label = paste(..r.label.., ..p.label.., sep = "~','~")))+ 
   guides(size = FALSE, color=guide_legend(keywidth=2.5,
                  keyheight=2.5,
                  default.unit="mm"), 
           shape=guide_legend(keywidth=2.5,
                  keyheight=2.5,
                  default.unit="mm"),
-         legend.key = element_rect(size = 2.5, fill = "white", colour = NA))+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7),
-        legend.spacing.y = unit(1.0, 'mm')) +
-  facet_wrap(~Marker)
+         legend.key = element_rect(size = 2.5, fill = "white", colour = NA))+ 
+  theme(axis.text.x = element_text(color = "black", size = 9),
+        axis.text.y = element_text(color = "black", size = 9),  
+        axis.title.x = element_text(color = "black", size = 11),
+        axis.title.y = element_text(color = "black", size = 11),
+        legend.spacing.y = unit(1.1, 'mm')) +
+  facet_wrap(~Marker) +
+  scale_color_manual(values = xgfs_normal12)
 
 tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure8_v3-2020-11-17.tiff", width=170,height=60, units = "mm", res = 300)
 p3
 dev.off()
 ```
+
+
+
+```{r pretty plot correlations carbon with stats}
+mypal <- c(rgb(235/255, 172/255, 35/255), rgb(184/255, 0/255, 88/255), rgb(0/255, 140/255, 249/255), rgb(0/255, 110/255, 0/255), rgb(0/255, 187/255, 173/255), rgb(209/255, 99/255, 230/255), "#000000", rgb(255/255, 146/255, 135/255)) # rgb(178/255, 69/255, 2/255),
+
+appendicularians_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_append", y = "seqs_append", shape = "Cycle", color = "Net"), xlab = NULL, ylab = NULL) +
+   geom_point(size = 0.9) +
+  xlab("") +
+ylab("") +
+   ggtitle("18S Appendicularians") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none") +
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_append, y = seqs_append, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),
+    label.x.npc = 0.05, 
+    label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) + 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) + 
+  labs(color = "Net", shape = "Cycle") #+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#appendicularians_18s <- mygg.gap(appendicularians_18s,
+#    ylim = c(0, 0.0125), 
+#    segments = c(0.0051, 0.01),
+#    tick_width = 0.0025,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+appendicularians_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_append", y = "seqs_append", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Appendicularians") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_append, y = seqs_append, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) +
+  theme(axis.line.x.top = element_blank(),
+        axis.line.y.right = element_blank())
+
+
+bryozoans_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_bryozoans", y = "seqs_bryozoans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("18S Bryozoans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))#+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#bryozoans_18s <- mygg.gap(bryozoans_18s,
+#    ylim = c(0, 0.015), 
+#    segments = c(0.002, 0.014),
+#    tick_width = 0.001,
+#    rel_heights = c(0.5,0,0.3),
+#   margin = c(0,0,0,0)
+#  )
+
+bryozoans_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_bryozoans", y = "seqs_bryozoans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("COI Bryozoans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))#+
+#  theme(panel.background = element_rect(fill = "white"), 
+# # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#bryozoans_COI <- mygg.gap(bryozoans_COI,
+#    ylim = c(0, 0.08), 
+#    segments = c(0.02, 0.06),
+#    tick_width = 0.01,
+#    rel_heights = c(0.5,0,0.35),
+#   margin = c(0,0,0,0)
+#  )
+
+
+chaetognaths_18s <- ggplot(leray_proportions_trans, aes_string(x = "carbon_chaetognaths", y = "seqs_chaetognaths", shape = "Cycle", color = "Net")) +
+#   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Chaetognaths") +
+   theme_classic(base_size = 7)+ 
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(legend.position = "none")+ 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+    scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+
+chaetognaths_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_chaetognaths", y = "seqs_chaetognaths", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Chaetognaths") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_chaetognaths, y = seqs_chaetognaths, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.55,      label.y.npc = 0.70, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+
+
+cnidarians_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_cnidarians", y = "seqs_cnidarians", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+  xlab("") +
+ylab("") +
+   ggtitle("18S Cnidarians & Ctenoph.") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))#+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#cnidarians_18s <- mygg.gap(cnidarians_18s,
+#    ylim = c(0, 0.85), 
+#    segments = c(0.5, 0.75),
+#    tick_width = 0.2,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+cnidarians_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_cnidarians", y = "seqs_cnidarians", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+  xlab("") +
+ylab("") +
+   ggtitle("COI Cnidarians & Ctenoph.") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.85, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) #+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#cnidarians_COI <- mygg.gap(cnidarians_COI,
+#    ylim = c(0, 0.8), 
+#    segments = c(0.25, 0.50),
+#    tick_width = 0.2,
+#    rel_heights = c(0.4,0,0.4),
+#   margin = c(0,0,0,0)
+#  )
+
+
+calanoids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Calanoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+calanoids_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Calanoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+eucalanids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Eucalanids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+eucalanids_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Eucalanids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+oithona_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_oithona", y = "seqs_oithona", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("18S Oithonids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_oithona, y = seqs_oithona, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.001), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA)) #+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#oithona_18s <- mygg.gap(oithona_18s,
+#    ylim = c(0, 0.23), 
+#    segments = c(0.02, 0.22),
+#    tick_width = 0.01,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+oithona_COI <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_oithona", y = "seqs_oithona", shape = "Cycle", color = "Net")) +
+#   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Oithonids") +
+   theme_classic(base_size = 7)+ 
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+ theme(legend.position = "none")+ 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+
+poecilost_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_poecilost", y = "seqs_poecilost", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Poecilostomatoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_poecilost, y = seqs_poecilost, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+poecilost_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_poecilost", y = "seqs_poecilost", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Poecilostomatoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_poecilost, y = seqs_poecilost, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA)) 
+
+
+doliolids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_doliolids", y = "seqs_doliolids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Doliolids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_doliolids, y = seqs_doliolids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+doliolids_COI <-  ggplot(zhan_proportions_trans, aes_string(x = "carbon_doliolids", y = "seqs_doliolids", shape = "Cycle", color = "Net")) +
+#   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Doliolids") +
+   theme_classic(base_size = 7)+ 
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+ theme(legend.position = "none")+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())#+ 
+#  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+thaliaceans_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Thaliaceans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+
+thaliaceans_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("COI Thaliaceans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.15,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) #+ 
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#thaliaceans_COI <- mygg.gap(thaliaceans_COI,
+#    ylim = c(0, 0.00575), 
+#    segments = c(0.00075, 0.0055),
+#    tick_width = 0.00025,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+
+malacostraca_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_malacostraca", y = "seqs_malacostraca", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Malacostracans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+malacostraca_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_malacostraca", y = "seqs_malacostraca", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Malacostracans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+
+ostracods_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Ostracods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.85, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific)
+
+ostracods_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Ostracods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.02,      label.y.npc = 0.95, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+polychaetes_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_polychaetes", y = "seqs_polychaetes", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("18S Polychaetes") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) #+ 
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#polychaetes_18s <- mygg.gap(polychaetes_18s,
+#    ylim = c(0, 0.09), 
+#    segments = c(0.035, 0.085),
+#    tick_width = 0.01,
+#    rel_heights = c(0.5,0,0.3),
+#   margin = c(0,0,0,0)
+#  )
+
+polychaetes_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_polychaetes", y = "seqs_polychaetes", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Polychaetes") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.85, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) 
+
+pteropods_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_pteropods", y = "seqs_pteropods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Pteropods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_pteropods, y = seqs_pteropods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.15,      label.y.npc = 0.80, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+pteropods_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_pteropods", y = "seqs_pteropods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Pteropods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_pteropods, y = seqs_pteropods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.15,      label.y.npc = 0.80, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+pyrosomes_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_pyrosomes", y = "seqs_pyrosomes", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Pyrosomes") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_pyrosomes, y = seqs_pyrosomes, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+pyrosomes_COI <-  ggplot(zhan_proportions_trans, aes_string(x = "carbon_pyrosomes", y = "seqs_pyrosomes", shape = "Cycle", color = "Net")) +
+  # geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Pyrosomes") +
+   theme_classic(base_size = 7)+ 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+ theme(legend.position = "none")+ 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())#+ 
+ # scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+salps_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_salps", y = "seqs_salps", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Salps") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none") +
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_salps, y = seqs_salps, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) 
+
+
+salps_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_salps", y = "seqs_salps", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("COI Salps") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none") +
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_salps, y = seqs_salps, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.999, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) #+ 
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#salps_COI <- mygg.gap(salps_COI,
+#    ylim = c(0, 0.006), 
+#    segments = c(0.0006, 0.0055),
+#    tick_width = 0.0005,
+#    rel_heights = c(0.5,0,0.3),
+#   margin = c(0,0,0,0)
+#  )
+
+
+
+
+# Create a figure by combining the different plots
+figure1 <- ggarrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 8, ncol = 4, common.legend = TRUE, legend="right", align = "hv")
+#figure2 <- ggarrange( nrow = 6, ncol = 2, common.legend = TRUE, legend="right")
+#figure3 <- ggarrange( nrow = 6, ncol = 2, common.legend = TRUE, legend="right")
+
+# Annotate the figure by adding a common labels
+figure1 <- annotate_figure(figure1,
+                top = text_grob("All Taxa: Proportion Read Counts vs. Proportion Biomass", size = 12),
+                bottom = text_grob("Proportion biomass (arcsine square-root)", size = 11),
+                left = text_grob("Proportion sequences (arcsine square-root)", rot = 90, size = 11)
+                )
+#figure2 <- annotate_figure(figure2,
+#                top = text_grob("All Taxa: Relative Read Counts vs. Percent Biomass", size = 12),
+#                bottom = text_grob("Percent biomass", size = 11),
+#                left = text_grob("Percent sequences", rot = 90, size = 11)
+#                )
+#figure3 <- annotate_figure(figure3,
+#                top = text_grob("All Taxa: Relative Read Counts vs. Percent Biomass", size = 12),
+#                bottom = text_grob("Percent biomass", size = 11),
+#                left = text_grob("Percent sequences", rot = 90, size = 11)
+#                )
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/FigureS1_v3-2020-12-2_1pg_legend_transformed.pdf", width=8,height=10)
+figure1
+#figure2
+#figure3
+dev.off()
+
+```
+
+
+
+###REDOO fig s2
+```{r pretty plot correlations abundance with stats}
+mypal <- c(rgb(235/255, 172/255, 35/255), rgb(184/255, 0/255, 88/255), rgb(0/255, 140/255, 249/255), rgb(0/255, 110/255, 0/255), rgb(0/255, 187/255, 173/255), rgb(209/255, 99/255, 230/255), "#000000", rgb(255/255, 146/255, 135/255)) # rgb(178/255, 69/255, 2/255),
+
+appendicularians_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_append", y = "seqs_append", shape = "Cycle", color = "Net"), xlab = NULL, ylab = NULL) +
+   geom_point(size = 0.9) +
+  xlab("") +
+ylab("") +
+   ggtitle("18S Appendicularians") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none") +
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_append, y = seqs_append, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),
+    label.x.npc = 0.05, 
+    label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) + 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) + 
+  labs(color = "Net", shape = "Cycle") #+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#appendicularians_18s <- mygg.gap(appendicularians_18s,
+#    ylim = c(0, 0.0125), 
+#    segments = c(0.0051, 0.01),
+#    tick_width = 0.0025,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+appendicularians_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_append", y = "seqs_append", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Appendicularians") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_append, y = seqs_append, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) +
+  theme(axis.line.x.top = element_blank(),
+        axis.line.y.right = element_blank())
+
+
+bryozoans_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_bryozoans", y = "seqs_bryozoans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("18S Bryozoans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))#+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#bryozoans_18s <- mygg.gap(bryozoans_18s,
+#    ylim = c(0, 0.015), 
+#    segments = c(0.002, 0.014),
+#    tick_width = 0.001,
+#    rel_heights = c(0.5,0,0.3),
+#   margin = c(0,0,0,0)
+#  )
+
+bryozoans_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_bryozoans", y = "seqs_bryozoans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("COI Bryozoans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_bryozoans, y = seqs_bryozoans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))#+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#bryozoans_COI <- mygg.gap(bryozoans_COI,
+#    ylim = c(0, 0.08), 
+#    segments = c(0.02, 0.06),
+#    tick_width = 0.01,
+#    rel_heights = c(0.5,0,0.35),
+#   margin = c(0,0,0,0)
+#  )
+
+
+chaetognaths_18s <- ggplot(leray_proportions_trans, aes_string(x = "abund_chatognaths", y = "seqs_chaetognaths", shape = "Cycle", color = "Net")) +
+#   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Chaetognaths") +
+   theme_classic(base_size = 7)+ 
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(legend.position = "none")+ 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+    scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+
+chaetognaths_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_chatognaths", y = "seqs_chaetognaths", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Chaetognaths") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_chatognaths, y = seqs_chaetognaths, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.45,      label.y.npc = 0.70, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+
+
+cnidarians_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_cnidarians", y = "seqs_cnidarians", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+  xlab("") +
+ylab("") +
+   ggtitle("18S Cnidarians & Ctenoph.") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))#+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#cnidarians_18s <- mygg.gap(cnidarians_18s,
+#    ylim = c(0, 0.85), 
+#    segments = c(0.5, 0.75),
+#    tick_width = 0.2,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+cnidarians_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_cnidarians", y = "seqs_cnidarians", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+  xlab("") +
+ylab("") +
+   ggtitle("COI Cnidarians & Ctenoph.") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_cnidarians, y = seqs_cnidarians, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.88, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) #+
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#cnidarians_COI <- mygg.gap(cnidarians_COI,
+#    ylim = c(0, 0.8), 
+#    segments = c(0.25, 0.50),
+#    tick_width = 0.2,
+#    rel_heights = c(0.4,0,0.4),
+#   margin = c(0,0,0,0)
+#  )
+
+
+calanoids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_calanoids", y = "seqs_calanoids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Calanoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_calanoids, y = seqs_calanoids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+calanoids_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_calanoids", y = "seqs_calanoids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Calanoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_calanoids, y = seqs_calanoids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+eucalanids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_eucalanids", y = "seqs_eucalanids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Eucalanids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.00,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+eucalanids_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_eucalanids", y = "seqs_eucalanids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Eucalanids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.0,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+oithona_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_oithona", y = "seqs_oithona", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("18S Oithonids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_oithona, y = seqs_oithona, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.99, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#oithona_18s <- mygg.gap(oithona_18s,
+#    ylim = c(0, 0.23), 
+#    segments = c(0.02, 0.22),
+#    tick_width = 0.01,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+oithona_COI <- ggplot(zhan_proportions_trans, aes_string(x = "abund_oithona", y = "seqs_oithona", shape = "Cycle", color = "Net")) +
+#   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Oithonids") +
+   theme_classic(base_size = 7)+ 
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+ theme(legend.position = "none")+ 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+
+poecilost_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_poecilost", y = "seqs_poecilost", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Poecilostomatoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_poecilost, y = seqs_poecilost, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.55,      label.y.npc = 0.93, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA)) 
+
+poecilost_COI <-  ggplot(leray_proportions_trans, aes_string(x = "abund_poecilost", y = "seqs_poecilost", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Poecilostomatoids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_poecilost, y = seqs_poecilost, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.55,      label.y.npc = 0.94, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA)) 
+
+
+doliolids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_doliolids", y = "seqs_doliolids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Doliolids") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_doliolids, y = seqs_doliolids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+doliolids_COI <-  ggplot(zhan_proportions_trans, aes_string(x = "abund_doliolids", y = "seqs_doliolids", shape = "Cycle", color = "Net")) +
+#   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Doliolids") +
+   theme_classic(base_size = 7)+ 
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+ theme(legend.position = "none")+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())#+ 
+#  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+thaliaceans_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_thaliaceans", y = "seqs_thaliaceans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Thaliaceans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.15,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+
+thaliaceans_COI <- ggplot(leray_proportions_trans, aes_string(x = "abund_thaliaceans", y = "seqs_thaliaceans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("COI Thaliaceans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.15,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) #+ 
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#thaliaceans_COI <- mygg.gap(thaliaceans_COI,
+#    ylim = c(0, 0.00575), 
+#    segments = c(0.00075, 0.0055),
+#    tick_width = 0.00025,
+#    rel_heights = c(0.5,0,0.25),
+#   margin = c(0,0,0,0)
+#  )
+
+
+
+malacostraca_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_malacostraca", y = "seqs_malacostraca", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Malacostracans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.88, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+malacostraca_COI <-  ggplot(leray_proportions_trans, aes_string(x = "abund_malacostraca", y = "seqs_malacostraca", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Malacostracans") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_malacostraca, y = seqs_malacostraca, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.2,      label.y.npc = 0.88, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01), limits = c(0,NA)) + scale_x_continuous(limits = c(0, NA))
+
+
+ostracods_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_ostracods", y = "seqs_ostracods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Ostracods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_ostracods, y = seqs_ostracods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific)
+
+ostracods_COI <-  ggplot(leray_proportions_trans, aes_string(x = "abund_ostracods", y = "seqs_ostracods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Ostracods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_ostracods, y = seqs_ostracods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+polychaetes_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_polychaetes", y = "seqs_polychaetes", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("18S Polychaetes") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) 
+
+polychaetes_COI <-  ggplot(leray_proportions_trans, aes_string(x = "abund_polychaetes", y = "seqs_polychaetes", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Polychaetes") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_polychaetes, y = seqs_polychaetes, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.85, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) 
+
+pteropods_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_pteropods", y = "seqs_pteropods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Pteropods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_pteropods, y = seqs_pteropods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.85, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+pteropods_COI <-  ggplot(leray_proportions_trans, aes_string(x = "abund_pteropods", y = "seqs_pteropods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Pteropods") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_pteropods, y = seqs_pteropods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.25,      label.y.npc = 0.85, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+pyrosomes_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_pyrosomes", y = "seqs_pyrosomes", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Pyrosomes") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none")+
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_pyrosomes, y = seqs_pyrosomes, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.05,      label.y.npc = 0.97, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+pyrosomes_COI <-  ggplot(zhan_proportions_trans, aes_string(x = "abund_pyrosomes", y = "seqs_pyrosomes", shape = "Cycle", color = "Net")) +
+  # geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Pyrosomes") +
+   theme_classic(base_size = 7)+ 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+ theme(legend.position = "none")+ 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())#+ 
+ # scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01))
+
+
+salps_18s <- ggplot(zhan_proportions_trans, aes_string(x = "abund_salps", y = "seqs_salps", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Salps") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none") +
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = abund_salps, y = seqs_salps, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),                                               labels = c("'***'", "'**'", "'*'", "'ns'")),sep = "~")),     label.x.npc = 0.45,      label.y.npc = 0.90, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),     panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(   labels = scales::number_format(accuracy = 0.01)) 
+
+
+salps_COI <-  ggplot(leray_proportions_trans, aes_string(x = "abund_salps", y = "seqs_salps", shape = "Cycle", color = "Net")) +
+   geom_point(size = 0.9) +
+   xlab("") +
+   ylab("") +
+   ggtitle("COI Salps") +
+   theme_classic(base_size = 7)+ 
+  theme(legend.position = "none") +
+  stat_cor(size = 2, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = abund_salps, y = seqs_salps, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")),     label.x.npc = 0.45,      label.y.npc = 0.999, hjust = 0)+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ 
+  scale_color_manual(values = mypal) + scale_y_continuous(labels = scales::scientific) #+ 
+#  theme(panel.background = element_rect(fill = "white"), 
+#   # panel.grid = element_blank(),
+#    axis.line = element_blank())
+#salps_COI <- mygg.gap(salps_COI,
+#    ylim = c(0, 0.006), 
+#    segments = c(0.0006, 0.0055),
+#    tick_width = 0.0005,
+#    rel_heights = c(0.5,0,0.3),
+#   margin = c(0,0,0,0)
+#  )
+
+
+
+
+# Create a figure by combining the different plots
+figure1 <- ggarrange(appendicularians_COI, appendicularians_18s, bryozoans_COI, bryozoans_18s, chaetognaths_COI, chaetognaths_18s, cnidarians_COI, cnidarians_18s, calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s,  oithona_COI, oithona_18s, poecilost_COI, poecilost_18s, doliolids_COI, doliolids_18s, thaliaceans_COI, thaliaceans_18s, malacostraca_COI, malacostraca_18s, ostracods_COI, ostracods_18s, polychaetes_COI, polychaetes_18s, pteropods_COI, pteropods_18s, pyrosomes_COI, pyrosomes_18s, salps_COI, salps_18s, nrow = 8, ncol = 4, common.legend = TRUE, legend = "right", align = "hv")
+
+#figure2 <- ggarrange( nrow = 6, ncol = 2, common.legend = TRUE, legend = "right")
+
+#figure3 <- ggarrange(  nrow = 6, ncol = 2, common.legend = TRUE, legend = "right")
+
+# Annotate the figure by adding a common labels
+figure1 <- annotate_figure(figure1,
+                top = text_grob("All Taxa: Proportion Read Counts vs. Proportion Abundance", size = 12),
+                bottom = text_grob("Proportion abundance (arcsine square-root)", size = 11),
+                left = text_grob("Proportion sequences (arcsine square-root)", rot = 90, size = 11)
+                )
+#figure2 <- annotate_figure(figure2,
+#                top = text_grob("All Taxa: Relative Read Counts vs. Percent Abundance", size = 12),
+#                bottom = text_grob("Percent abundance", size = 11),
+#                left = text_grob("Percent sequences", rot = 90, size = 11)
+#                )
+#figure3 <- annotate_figure(figure3,
+#                top = text_grob("All Taxa: Relative Read Counts vs. Percent Abundance", size = 12),
+#                bottom = text_grob("Percent abundance", size = 11),
+#                left = text_grob("Percent sequences", rot = 90, size = 11)
+#                )
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/FigureS2_v3-2020-12-2_1pg_legend_transformed.pdf", width=8,height=10)
+figure1
+dev.off()
+
+```
+
+
+#### REDO fig 5
+```{r pretty plot Fig 7}
+
+calanoids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "Cycle", color = "Net" )) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Calanoids") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3,  label.x.npc = 0.00, label.y.npc = 0.95, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+ scale_y_continuous(labels = scales::number_format(accuracy = 0.001), limits = c(0,NA)) +
+  scale_x_continuous(limits = c(0,NA))#+
+#  xlim(0,1) + 
+#  ylim(0,1)
+
+
+calanoids_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_calanoids", y = "seqs_calanoids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Calanoids") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3, label.x.npc = 0.00, label.y.npc = 0.95, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_calanoids, y = seqs_calanoids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+               axis.title.x = element_blank(),
+                axis.title.y = element_blank())+ scale_y_continuous(
+  labels = scales::number_format(accuracy = 0.001), limits = c(0,NA)) +
+  scale_x_continuous(limits = c(0,NA))#+
+#  xlim(0,1) + 
+#  ylim(0,1)
+
+
+eucalanids_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "Cycle", color = "Net" )) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Eucalanids") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3, label.x.npc = 0.00, label.y.npc = 0.95, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank())+ scale_y_continuous(
+  labels = scales::number_format(accuracy = 0.001))#+
+#  xlim(0,1) + 
+#  ylim(0,1)
+
+eucalanids_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_eucalanids", y = "seqs_eucalanids", shape = "Cycle", color = "Net")) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Eucalanids") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3, label.x.npc = 0.00, label.y.npc = 0.95, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_eucalanids, y = seqs_eucalanids, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank())+ scale_y_continuous(
+  labels = scales::number_format(accuracy = 0.001))#+
+#  xlim(0,1) + 
+#  ylim(0,1)
+
+
+
+thaliaceans_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Thaliaceans") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3, label.x.npc = 0.00, label.y.npc = 0.85, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = zhan_proportions_trans, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank())+ scale_y_continuous(labels = scales::number_format(accuracy = 0.001)) #+
+#  xlim(0,1) + 
+#  ylim(0,1)
+
+#add column for faceting
+thaliaceans_COI <- ggplot(leray_proportions_trans, aes_string(x = "carbon_thaliaceans", y = "seqs_thaliaceans", shape = "Cycle", color = "Net")) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Thaliaceans") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3, label.x.npc = 0.00, label.y.npc = 0.85, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_thaliaceans, y = seqs_thaliaceans, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank())+ scale_y_continuous(labels = scales::number_format(accuracy = 0.001)) #+ 
+#  ylim(0, 0.006)
+#+
+#  facet_zoom(ylim = c(0, 0.001))#+
+#thaliaceans_COI
+#  xlim(0,1) + 
+#  ylim(0,.01)
+
+
+
+
+ostracods_18s <- ggplot(zhan_proportions_trans, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("18S Ostracods") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3,  label.x.npc = 0.00, label.y.npc = 0.85,inherit.aes = F, method = "pearson", cor.coef.name = "R", exact = F, data = zhan_proportions_trans, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank())+ scale_y_continuous(labels = scales::number_format(accuracy = 0.001))# +
+#  xlim(0,0.07) +
+#  ylim(0,0.0012)#+
+#  facet_zoom(ylim = c(0, 0.0005))#+
+#ostracods_18s
+
+ostracods_COI <-  ggplot(leray_proportions_trans, aes_string(x = "carbon_ostracods", y = "seqs_ostracods", shape = "Cycle", color = "Net")) +
+   geom_point(size = 1.7) +
+   xlab("Proportion carbon") +
+   ylab("Proportion sequences") +
+   ggtitle("COI Ostracods") +
+   theme_bw(base_size = 11)+
+  theme(legend.position = "none") + scale_color_manual(values=mypal)+
+  stat_cor(size = 3, label.x.npc = 0.00, label.y.npc = 0.9, inherit.aes = F, method = "pearson", cor.coef.name = "R", data = leray_proportions_trans, aes(x = carbon_ostracods, y = seqs_ostracods, label = paste(..r.label.., cut(..p.., breaks = c(-Inf, 0.001/56, 0.01/56, 0.05/56, Inf),
+                                              labels = c("'***'", "'**'", "'*'", "'ns'")), sep = "~")))+ 
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank()) + scale_y_continuous(labels = scales::number_format(accuracy = 0.001))#+
+#  xlim(0,.07) + 
+#  ylim(0,.1)#+
+#  gghighlight(carbon_ostracods > 0, use_direct_label = FALSE)
+
+
+#create figure
+figure <- ggarrange(calanoids_COI, calanoids_18s, eucalanids_COI, eucalanids_18s, thaliaceans_COI, thaliaceans_18s, ostracods_COI, ostracods_18s, nrow = 4, ncol = 2, common.legend = TRUE, legend = "right", align = "hv")
+
+#annotate figure
+figure <- annotate_figure(figure,
+             #   top = text_grob("All Taxa: Relative Read Counts vs. Percent Abundance", size = 12),
+                bottom = text_grob("Proportion carbon biomass (arcsine square-root)", size = 11),
+                left = text_grob("Proportion sequences (arcsine square-root)", rot = 90, size = 11)
+                )
+#save as tiff
+tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure5_rev2_arcsinetrans.tiff", width=170,height=190, units = "mm", res = 300)
+figure
+dev.off()
+
+#save as pdf
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/Figure5_rev2_arcsinetrans.pdf", width=6.69,height=7.48)
+figure
+dev.off()
+
+
+
+
+```
+
 

@@ -27,22 +27,97 @@ library(lmodel2)
 library(mgcv)
 library(goeveg)
 library(metagMisc)
+library(ggpubr)
 theme_update(plot.title = element_text(hjust = 0.5))
-
+set.seed(2386)
 ```
 
 
 ```{r load}
 load("~/Documents/Chapter4/Oct2020_ICES/COI_v1biom_ZOOPLANKTON.Rdat")
+zooplankton_COI_midori <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) > 25000)
 sample_data(zooplankton_COI_midori)$sequencingdepth <- sample_sums(zooplankton_COI_midori)
 sample_data(zooplankton_COI_midori)$observed <- estimate_richness(zooplankton_COI_midori, measures = "Observed")$Observed
+sample_data(zooplankton_COI_midori)$rarefiedobserved <- estimate_richness(rarefy_even_depth(zooplankton_COI_midori), measures = "Observed")$Observed
 sample_data(zooplankton_COI_midori)$percentprocessed <- as.numeric(sample_data(zooplankton_COI_midori)$percentprocessed)
-zooplankton_COI_midori <- prune_samples(sample_sums(zooplankton_COI_midori) > 0, zooplankton_COI_midori)
 load("~/Documents/Chapter4/Oct2020_ICES/18S_v1biom_ZOOPLANKTON.Rdat")
+zooplankton_18S_silva <- prune_samples(sample_sums(zooplankton_18S_silva) > 20000, zooplankton_18S_silva)
 sample_data(zooplankton_18S_silva)$sequencingdepth <- sample_sums(zooplankton_18S_silva)
 sample_data(zooplankton_18S_silva)$observed <- estimate_richness(zooplankton_18S_silva, measures = "Observed")$Observed
+sample_data(zooplankton_18S_silva)$rarefiedobserved <- estimate_richness(rarefy_even_depth(zooplankton_18S_silva), measures = "Observed")$Observed
 sample_data(zooplankton_18S_silva)$percentprocessed <- as.numeric(sample_data(zooplankton_18S_silva)$percentprocessed)
 
+```
+
+```{r define rarefaction plotting function so I can control line thickness}
+ggrare_steph <- function(physeq_object, step = 10, label = NULL, color = NULL, 
+  plot = TRUE, parallel = FALSE, se = TRUE){
+  x <- methods::as(phyloseq::otu_table(physeq_object), "matrix")
+  if (phyloseq::taxa_are_rows(physeq_object)) {
+    x <- t(x)
+  }
+  tot <- rowSums(x)
+  S <- rowSums(x > 0)
+  nr <- nrow(x)
+  rarefun <- function(i) {
+    cat(paste("rarefying sample", rownames(x)[i]), sep = "\n")
+    n <- seq(1, tot[i], by = step)
+    if (n[length(n)] != tot[i]) {
+      n <- c(n, tot[i])
+    }
+    y <- vegan::rarefy(x[i, , drop = FALSE], n, se = se)
+    if (nrow(y) != 1) {
+      rownames(y) <- c(".S", ".se")
+      return(data.frame(t(y), Size = n, Sample = rownames(x)[i]))
+    }
+    else {
+      return(data.frame(.S = y[1, ], Size = n, Sample = rownames(x)[i]))
+    }
+  }
+  if (parallel) {
+    out <- parallel::mclapply(seq_len(nr), rarefun, mc.preschedule = FALSE)
+  }
+  else {
+    out <- lapply(seq_len(nr), rarefun)
+  }
+  df <- do.call(rbind, out)
+  if (!is.null(phyloseq::sample_data(physeq_object, FALSE))) {
+    sdf <- methods::as(phyloseq::sample_data(physeq_object), 
+      "data.frame")
+    sdf$Sample <- rownames(sdf)
+    data <- merge(df, sdf, by = "Sample")
+    labels <- data.frame(x = tot, y = S, Sample = rownames(x))
+    labels <- merge(labels, sdf, by = "Sample")
+  }
+  if (length(color) > 1) {
+    data$color <- color
+    names(data)[names(data) == "color"] <- deparse(substitute(color))
+    color <- deparse(substitute(color))
+  }
+  if (length(label) > 1) {
+    labels$label <- label
+    names(labels)[names(labels) == "label"] <- deparse(substitute(label))
+    label <- deparse(substitute(label))
+  }
+  p <- ggplot2::ggplot(data = data, ggplot2::aes_string(x = "Size", 
+    y = ".S", group = "Sample", color = color))
+  p <- p + ggplot2::labs(x = "Sequence Sample Size", y = "Species Richness")
+  if (!is.null(label)) {
+    p <- p + ggplot2::geom_text(data = labels, ggplot2::aes_string(x = "x", 
+      y = "y", label = label, color = color), size = 4, 
+      hjust = 0)
+  }
+  p <- p + ggplot2::geom_line(size = 0.2)
+  if (se) {
+    p <- p + ggplot2::geom_ribbon(ggplot2::aes_string(ymin = ".S - .se", 
+      ymax = ".S + .se", color = NULL, fill = color), 
+      alpha = 0.2)
+  }
+  if (plot) {
+    plot(p)
+  }
+  invisible(p)
+}
 ```
 
 
@@ -50,64 +125,397 @@ sample_data(zooplankton_18S_silva)$percentprocessed <- as.numeric(sample_data(zo
 #out18s <- rarecurve(t(otu_table(zooplankton_18S_silva)), step=1000, label = FALSE) 
 #outCOI <- rarecurve(t(otu_table(zooplankton_COI_midori)), step=1000, label = FALSE) 
 
-out18s <- ggrare(zooplankton_18S_silva, step = 1000, se = FALSE)
-outCOI <- ggrare(zooplankton_COI_midori, step = 1000, se = TRUE)
-out18s <- out18s + theme_bw(base_size = 7) + ggtitle("B. 18S Rarefaction Curves") + geom_line(size=0.05)+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
-outCOI <- outCOI + theme_bw(base_size = 7) + ggtitle("A. COI Rarefaction Curves") + geom_line(size=0.05)+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
+out18s <- ggrare_steph(zooplankton_18S_silva, step = 1000, se = FALSE)
+outCOI <- ggrare_steph(zooplankton_COI_midori, step = 1000, se = FALSE)
+out18s <- out18s + theme_bw(base_size = 11) + ggtitle("B. 18S Rarefaction Curves") + 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10)) +
+  ylab("Observed ASVs") +
+  geom_vline(xintercept = 20000, size = 0.2, linetype = "dashed")
 
-df_COI <- data.frame(sample_data(rarefy_even_depth(zooplankton_COI_midori, sample.size = 10747)))
-scatter_COI <- ggplot(data = df_COI, aes(x = sequencingdepth, y = observed))+
+outCOI <- outCOI + theme_bw(base_size = 11) + ggtitle("A. COI Rarefaction Curves") + 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10))+
+  ylab("Observed OTUs")+
+  geom_vline(xintercept = 25000, size = 0.2, linetype = "dashed") + xlim(0, 90000)
+
+
+df_COI <- data.frame(sample_data((zooplankton_COI_midori)))
+scatter_COI <- ggplot(data = df_COI, aes(x = sequencingdepth, y = rarefiedobserved))+
    geom_point(size = 0.2) +
-  theme_bw(base_size = 7) + 
+  theme_bw(base_size = 11) + 
    ggtitle("C. Rarefied COI OTUs") + 
-  xlab("Original Sequencing Depth") + 
-  ylab("Observed OTUs (Rarefied)") +
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10))+ xlim(25000, 90000)
+
 scatter_COI
-cor.test(x = df_COI$sequencingdepth, y = df_COI$observed, method = "spearman", alternative = "greater")
+shapiro.test(df_COI$sequencingdepth) #test for normality
+shapiro.test(df_COI$rarefiedobserved) #test for normality
+cor.test(x = df_COI$sequencingdepth, y = df_COI$rarefiedobserved, method = "spearman", alternative = "two.sided", exact = T) #spearman b/c non-normal
 
 
-df_18S <- data.frame(sample_data(rarefy_even_depth(zooplankton_18S_silva, sample.size = 10383)))
-scatter_18S <- ggplot(data = df_18S, aes(x = sequencingdepth, y = observed))+
+df_18S <- data.frame(sample_data((zooplankton_18S_silva)))
+scatter_18S <- ggplot(data = df_18S, aes(x = sequencingdepth, y = rarefiedobserved))+
    geom_point(size = 0.2) +
-  theme_bw(base_size = 7) + 
-   ggtitle("D. Rarefied 18S OTUs")+ 
-  xlab("Original Sequencing Depth") + 
-  ylab("Observed ASVs (Rarefied)")+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
+  theme_bw(base_size = 11) + 
+   ggtitle("D. Rarefied 18S ASVs")+ 
+  xlab("Sequencing Depth") + 
+  ylab("Observed ASVs")+ 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10))
+
 scatter_18S
-cor.test(x = df_18S$sequencingdepth, y = df_18S$observed, method = "spearman", alternative = "greater")
+shapiro.test(df_18S$sequencingdepth)
+shapiro.test(df_18S$rarefiedobserved)
+cor.test(x = df_18S$sequencingdepth, y = df_18S$rarefiedobserved, method = "spearman", alternative = "two.sided", exact = T) #spearman b/c non-normal
 
 
-tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_v2_2020-11-17.tiff", width=85,height=60, units = "mm", res = 300) 
+tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_v2_2020-11-17_rev1.tiff", width=170,height=120, units = "mm", res = 300) 
 grid.arrange(outCOI, out18s, scatter_COI, scatter_18S, nrow = 2)
 dev.off()
 ```
 
+```{r figure 1 deep dive}
+
+firstquant18S <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) < quantile(sample_sums(zooplankton_18S_silva))[2])
+secondquant18S <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) >= quantile(sample_sums(zooplankton_18S_silva))[2])
+secondquant18S <- subset_samples(secondquant18S, sample_sums(secondquant18S) < quantile(sample_sums(zooplankton_18S_silva))[3])
+thirdquant18S <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) >= quantile(sample_sums(zooplankton_18S_silva))[3])
+thirdquant18S <- subset_samples(thirdquant18S, sample_sums(thirdquant18S) < quantile(sample_sums(zooplankton_18S_silva))[4])
+fourthquant18S <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) > quantile(sample_sums(zooplankton_18S_silva))[4])
+
+p1 <- ggrare_steph(firstquant18S, step = 2000, se = FALSE) + theme_bw() + ggtitle("18S First Quartile")
+p2 <- ggrare_steph(secondquant18S, step = 2000, se = FALSE) + theme_bw() + ggtitle("18S Second Quartile")
+p3 <- ggrare_steph(thirdquant18S, step = 2000, se = FALSE) + theme_bw() + ggtitle("18S Third Quartile")
+p4 <- ggrare_steph(fourthquant18S, step = 2000, se = FALSE) + theme_bw() + ggtitle("18S Fourth Quartile")
+
+firstquantCOI <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) < quantile(sample_sums(zooplankton_COI_midori))[2])
+secondquantCOI <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) >= quantile(sample_sums(zooplankton_COI_midori))[2])
+secondquantCOI <- subset_samples(secondquantCOI, sample_sums(secondquantCOI) < quantile(sample_sums(zooplankton_COI_midori))[3])
+thirdquantCOI <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) >= quantile(sample_sums(zooplankton_COI_midori))[3])
+thirdquantCOI <- subset_samples(thirdquantCOI, sample_sums(thirdquantCOI) < quantile(sample_sums(zooplankton_COI_midori))[4])
+fourthquantCOI <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) > quantile(sample_sums(zooplankton_COI_midori))[4])
+
+p5 <- ggrare_steph(firstquantCOI, step = 2000, se = FALSE) + theme_bw() + ggtitle("COI First Quartile")
+p6 <- ggrare_steph(secondquantCOI, step = 2000, se = FALSE) + theme_bw() + ggtitle("COI Second Quartile")
+p7 <- ggrare_steph(thirdquantCOI, step = 2000, se = FALSE) + theme_bw() + ggtitle("COI Third Quartile")
+p8 <- ggrare_steph(fourthquantCOI, step = 2000, se = FALSE) + theme_bw() + ggtitle("COI Fourth Quartile")
 
 
+zooplankton_18S_15K <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) > 15000)
+sample_data(zooplankton_18S_15K)$observed <- estimate_richness(zooplankton_18S_15K, measures = "Observed")$Observed
+sample_data(zooplankton_18S_15K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_18S_15K, sample.size = 15000), measures = "Observed")$Observed
+df_18S_15K <- data.frame(sample_data((zooplankton_18S_15K)))
+cor.test(x = df_18S_15K$sequencingdepth, y = df_18S_15K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_18S_15K$sequencingdepth, y = df_18S_15K$observedrarefied, method = "spearman", alternative = "greater")
+p9 <- ggplot(data = df_18S_15K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("18S OTUs (Samples with >15K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p10 <- ggplot(data = df_18S_15K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied 18S OTUs (Samples with >15K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+
+zooplankton_18S_20K <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) > 20000)
+sample_data(zooplankton_18S_20K)$observed <- estimate_richness(zooplankton_18S_20K, measures = "Observed")$Observed
+sample_data(zooplankton_18S_20K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_18S_20K, sample.size = 20000), measures = "Observed")$Observed
+df_18S_20K <- data.frame(sample_data((zooplankton_18S_20K)))
+cor.test(x = df_18S_20K$sequencingdepth, y = df_18S_20K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_18S_20K$sequencingdepth, y = df_18S_20K$observedrarefied, method = "spearman", alternative = "greater")
+p11 <- ggplot(data = df_18S_20K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("18S OTUs (Samples with >20K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p12 <- ggplot(data = df_18S_20K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied 18S OTUs (Samples with >20K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+zooplankton_18S_30K <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) > 30000)
+sample_data(zooplankton_18S_30K)$observed <- estimate_richness(zooplankton_18S_30K, measures = "Observed")$Observed
+sample_data(zooplankton_18S_30K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_18S_30K, sample.size = 30000), measures = "Observed")$Observed
+df_18S_30K <- data.frame(sample_data((zooplankton_18S_30K)))
+cor.test(x = df_18S_30K$sequencingdepth, y = df_18S_30K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_18S_30K$sequencingdepth, y = df_18S_30K$observedrarefied, method = "spearman", alternative = "greater")
+p13 <- ggplot(data = df_18S_30K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("18S OTUs (Samples with >30K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p14 <- ggplot(data = df_18S_30K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied 18S OTUs (Samples with >30K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+zooplankton_18S_40K <- subset_samples(zooplankton_18S_silva, sample_sums(zooplankton_18S_silva) > 40000)
+sample_data(zooplankton_18S_40K)$observed <- estimate_richness(zooplankton_18S_40K, measures = "Observed")$Observed
+sample_data(zooplankton_18S_40K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_18S_40K, sample.size = 40000), measures = "Observed")$Observed
+df_18S_40K <- data.frame(sample_data((zooplankton_18S_40K)))
+cor.test(x = df_18S_40K$sequencingdepth, y = df_18S_40K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_18S_40K$sequencingdepth, y = df_18S_40K$observedrarefied, method = "spearman", alternative = "greater")
+p14.1 <- ggplot(data = df_18S_40K, aes(x = sequencingdepth, y = observed))+
+#   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("18S OTUs (Samples with >40K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p14.2 <- ggplot(data = df_18S_40K, aes(x = sequencingdepth, y = observedrarefied))+
+#   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied 18S OTUs (Samples with >40K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+
+######
+
+
+zooplankton_COI_15K <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) > 15000)
+sample_data(zooplankton_COI_15K)$observed <- estimate_richness(zooplankton_COI_15K, measures = "Observed")$Observed
+sample_data(zooplankton_COI_15K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_COI_15K, sample.size = 15000), measures = "Observed")$Observed
+df_COI_15K <- data.frame(sample_data((zooplankton_COI_15K)))
+cor.test(x = df_COI_15K$sequencingdepth, y = df_COI_15K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_COI_15K$sequencingdepth, y = df_COI_15K$observedrarefied, method = "spearman", alternative = "greater")
+p15 <- ggplot(data = df_COI_15K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("COI OTUs (Samples with >15K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p16 <- ggplot(data = df_COI_15K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied COI OTUs (Samples with >15K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+zooplankton_COI_20K <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) > 20000)
+sample_data(zooplankton_COI_20K)$observed <- estimate_richness(zooplankton_COI_20K, measures = "Observed")$Observed
+sample_data(zooplankton_COI_20K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_COI_20K, sample.size = 20000), measures = "Observed")$Observed
+df_COI_20K <- data.frame(sample_data((zooplankton_COI_20K)))
+cor.test(x = df_COI_20K$sequencingdepth, y = df_COI_20K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_COI_20K$sequencingdepth, y = df_COI_20K$observedrarefied, method = "spearman", alternative = "greater")
+p17 <- ggplot(data = df_COI_20K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("COI OTUs (Samples with >20K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p18 <- ggplot(data = df_COI_20K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied COI OTUs (Samples with >20K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+
+zooplankton_COI_30K <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) > 30000)
+sample_data(zooplankton_COI_30K)$observed <- estimate_richness(zooplankton_COI_30K, measures = "Observed")$Observed
+sample_data(zooplankton_COI_30K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_COI_30K, sample.size = 30000), measures = "Observed")$Observed
+df_COI_30K <- data.frame(sample_data((zooplankton_COI_30K)))
+cor.test(x = df_COI_30K$sequencingdepth, y = df_COI_30K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_COI_30K$sequencingdepth, y = df_COI_30K$observedrarefied, method = "spearman", alternative = "greater")
+p19 <- ggplot(data = df_COI_30K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("COI OTUs (Samples with >30K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p20 <- ggplot(data = df_COI_30K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied COI OTUs (Samples with >30K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+zooplankton_COI_40K <- subset_samples(zooplankton_COI_midori, sample_sums(zooplankton_COI_midori) > 40000)
+sample_data(zooplankton_COI_40K)$observed <- estimate_richness(zooplankton_COI_40K, measures = "Observed")$Observed
+sample_data(zooplankton_COI_40K)$observedrarefied <- estimate_richness(rarefy_even_depth(zooplankton_COI_40K, sample.size = 40000), measures = "Observed")$Observed
+df_COI_40K <- data.frame(sample_data((zooplankton_COI_40K)))
+cor.test(x = df_COI_40K$sequencingdepth, y = df_COI_40K$observed, method = "spearman", alternative = "greater")
+cor.test(x = df_COI_40K$sequencingdepth, y = df_COI_40K$observedrarefied, method = "spearman", alternative = "greater")
+p21 <- ggplot(data = df_COI_40K, aes(x = sequencingdepth, y = observed))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("COI OTUs (Samples with >40K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+p22 <- ggplot(data = df_COI_40K, aes(x = sequencingdepth, y = observedrarefied))+
+   geom_point(size = 2, aes(color = net, shape = cycle)) +
+  scale_color_brewer(type = "seq", palette = "Dark2") +
+  theme_bw(base_size = 9) + 
+   ggtitle("Rarefied COI OTUs (Samples with >40K reads)") + 
+  xlab("Sequencing Depth") + 
+  ylab("Rarefied Observed OTUs") + 
+  theme(axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 7),  
+        axis.title.x = element_text(color = "black", size = 9),
+        axis.title.y = element_text(color = "black", size = 9),
+        legend.position = "none")
+
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_deepdive_v1.pdf", width=8,height=10) 
+grid.arrange(p15, p16, p17, p18, p19, p20, p21, p22, nrow = 4)
+grid.arrange(p5, p6, p7, p8, nrow = 4)
+grid.arrange(p9, p10, p11, p12, p13, p14, p14.1, p14.2, nrow = 4)
+grid.arrange(p1, p2, p3, p4, nrow = 4)
+dev.off()
+
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_deepdive_v2.pdf", width=8,height=10) 
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, nrow = 4)
+grid.arrange(p9 + facet_wrap(~cycle), p10+ facet_wrap(~cycle), p11+ facet_wrap(~cycle), p12+ facet_wrap(~cycle), p13+ facet_wrap(~cycle), p14+ facet_wrap(~cycle), p14.1+ facet_wrap(~cycle), p14.2+ facet_wrap(~cycle), nrow = 4)
+grid.arrange(p15+ facet_wrap(~cycle), p16+ facet_wrap(~cycle), p17+ facet_wrap(~cycle), p18+ facet_wrap(~cycle), p19+ facet_wrap(~cycle), p20+ facet_wrap(~cycle), p21+ facet_wrap(~cycle), p22+ facet_wrap(~cycle), nrow = 4)
+dev.off()
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_deepdive_v3.pdf", width=8,height=10) 
+grid.arrange(p1, p2, p3, p4, nrow = 4)
+grid.arrange(p5, p6, p7, p8, nrow = 4)
+grid.arrange(p9 + facet_wrap(~cycle) + xlim(15000, 80000), p10+ facet_wrap(~cycle) + xlim(15000, 80000), p11+ facet_wrap(~cycle) + xlim(15000, 80000), p12+ facet_wrap(~cycle) + xlim(15000, 80000), p13+ facet_wrap(~cycle) + xlim(15000, 80000), p14+ facet_wrap(~cycle) + xlim(15000, 80000), p14.1+ facet_wrap(~cycle) + xlim(15000, 80000), p14.2+ facet_wrap(~cycle) + xlim(15000, 80000), nrow = 4)
+grid.arrange(p15+ facet_wrap(~cycle) + xlim(15000, 80000), p16+ facet_wrap(~cycle) + xlim(15000, 80000), p17+ facet_wrap(~cycle) + xlim(15000, 80000), p18+ facet_wrap(~cycle) + xlim(15000, 80000), p19+ facet_wrap(~cycle) + xlim(15000, 80000), p20+ facet_wrap(~cycle) + xlim(15000, 80000), p21+ facet_wrap(~cycle) + xlim(15000, 80000), p22+ facet_wrap(~cycle) + xlim(15000, 80000), nrow = 4)
+dev.off()
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_20k40kreads.pdf", width=8,height=4)
+grid.arrange(p17, p21 + theme(legend.position = "left" ,
+        legend.spacing.y = unit(0.001, 'mm')), nrow = 1)
+dev.off()
+
+pdf("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_faceted.pdf", width=8,height=10)
+grid.arrange(p17 + theme(legend.position = "right",
+        legend.spacing.y = unit(0.001, 'mm')) +
+  stat_cor(alternative = "greater", size = 2, method = "spearman", cor.coef.name = "rho", aes(label = paste(..r.label.., ..p.label.., sep = "~`,`~"))) +
+          facet_wrap(net~cycle, nrow = 8, scales = "free"), nrow = 1) 
+grid.arrange(p11 + theme(legend.position = "right",
+        legend.spacing.y = unit(0.001, 'mm')) +
+  stat_cor(alternative = "greater", size = 2, method = "spearman", cor.coef.name = "rho", aes(label = paste(..r.label.., ..p.label.., sep = "~`,`~"))) +
+          facet_wrap(net~cycle, nrow = 8, scales = "free"), nrow = 1)
+dev.off()
+
+#tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure1_v2_2020-11-17.tiff", width=170,height=90, units = "mm", res = 300) 
+#grid.arrange(outCOI, out18s, scatter_COI, scatter_18S, nrow = 2)
+#dev.off()
+```
 
 
 
 
 ```{r figure 2}
 
-scratchcoi <- prune_samples(sample_sums(zooplankton_COI_midori) > 7916, zooplankton_COI_midori)
-scratchcoi <- rarefy_even_depth(scratchcoi, sample.size =  7916)
+scratchcoi <- prune_samples(sample_sums(zooplankton_COI_midori) > 0, zooplankton_COI_midori)
+scratchcoi <- rarefy_even_depth(scratchcoi)
 samples <- unique(sample_data(scratchcoi)$physicalsample)
 countreps <- table(sample_data(scratchcoi)$physicalsample)
 countreps <- countreps[countreps == 3]
@@ -162,8 +570,8 @@ for (i in 1:length(samples)){
   
 
 
-scratch18s <- prune_samples(sample_sums(zooplankton_18S_silva) > 8221, zooplankton_18S_silva)
-scratch18s <- rarefy_even_depth(scratch18s, sample.size =  8221)
+scratch18s <- prune_samples(sample_sums(zooplankton_18S_silva) > min(sample_sums(zooplankton_18S_silva)), zooplankton_18S_silva)
+scratch18s <- rarefy_even_depth(scratch18s)
 samples <- unique(sample_data(scratch18s)$Sample.ID)
 countreps <- table(sample_data(scratch18s)$Sample.ID)
 countreps <- countreps[countreps == 3]
@@ -232,53 +640,260 @@ tiff('~/Documents/Chapter4/Oct2020_ICES/plots/Figure2_v2_2020-11-17.tiff', width
 ggplot(df, aes(x = trashranks, y = trashresults)) +
     geom_jitter(height = 0.25, size = 0.3) +
 #    ggtitle("Appearance in Replicates by Rank Order") + 
-    theme_bw(base_size = 7) +
+    theme_bw(base_size = 12) +
     xlab("Rank Order") + 
     ylab("Replicates (N)")+ 
-  facet_wrap(Marker~., scales = "free_x", nrow = 1) + 
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
+  facet_wrap(Marker~., scales = "free_x", nrow = 1)+ 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10)) +
+  scale_y_discrete(name = "Replicates (N)", limits = c(1,2,3)) 
+
 dev.off()
   
+ggplot(df, aes(x = trashranks, y = trashresults)) +
+    geom_jitter(height = 0.25, size = 0.3) +
+#    ggtitle("Appearance in Replicates by Rank Order") + 
+    theme_bw(base_size = 12) +
+    xlab("Rank Order") + 
+    ylab("Replicates (N)")+ 
+  facet_wrap(Marker~., scales = "free_x", nrow = 1)+ 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10)) +
+  scale_y_discrete(name = "Replicates (N)", limits = c(1,2,3)) 
+```
+
+```{r figure 2 revisions}
+
+scratchcoi <- prune_samples(sample_sums(zooplankton_COI_midori) > 0, zooplankton_COI_midori)
+scratchcoi <- rarefy_even_depth(scratchcoi)
+samples <- unique(sample_data(scratchcoi)$physicalsample)
+countreps <- table(sample_data(scratchcoi)$physicalsample)
+countreps <- countreps[countreps == 3]
+samples <- names(countreps)
+
+cbind.fill <- function(...){
+    nm <- list(...) 
+    nm <- lapply(nm, as.matrix)
+    n <- max(sapply(nm, nrow)) 
+    do.call(cbind, lapply(nm, function (x) 
+        rbind(x, matrix(, n-nrow(x), ncol(x))))) 
+}
+
+myresults <- list() #create an empty list for replicates observed
+myranks <- list() #create an empty list for rank order
+myobserved <- list() # create an empty list for number of observed species in the sample
+myshannon <- list() #create empty list for shannon diversity (evenness) of the sample
+k <- 1
+for (i in 1:length(samples)){
+  sampleidentifier <- samples[i]
+  scratch <- subset_samples(scratchcoi, physicalsample == sampleidentifier)
+  scratch <- filter_taxa(scratch, function(x) sum(x) > 0, TRUE)
+  rankabcurve <- racurve(t(otu_table(scratch)))
+  #rankabcurve has info on 1) total abundance of each taxa, 2) relative abundance of each taxa, 3) frequency (number of individual samples it occurs in)
+  df_meta <- as.data.frame(rankabcurve)
+  pa_18S <- phyloseq_standardize_otu_abundance(scratch, method = "pa")
+  pa_18S_merge <- merge_samples(pa_18S, group = "physicalsample", fun = mean)
+  df <- data.frame(otu_table(pa_18S_merge))
+  df[df == 0] <- NA
+  means <- colMeans(df, na.rm = T) #need to remove zeros - replace with na and then na ignore ? 
+  names(means) <- colnames(df)
+  means <- data.frame(means)
+  df_meta_plus <- merge(df_meta, means, by=0)
+  df_meta_plus <- df_meta_plus[order(-df_meta_plus$abund),]
+  df_meta_plus$rank <- seq(nrow(df_meta_plus))
+  myresults[[k]] <- df_meta_plus$means #save results
+  myranks[[k]] <- df_meta_plus$rank #save ranks
+  myobserved[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Observed")$Observed, n = nrow(df_meta_plus))
+  myshannon[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Shannon")$Shannon, n = nrow(df_meta_plus))
+  k <- k+1
+
+}
+  trashresults <- do.call("cbind.fill", myresults) #combine all vectors into a matrix
+  trashresults <- as.vector(t(trashresults))
+  trashranks <- do.call("cbind.fill", myranks) #combine all vectors into a matrix
+  trashranks <- as.vector(t(trashranks))
+  trashobserved <- do.call("cbind.fill", myobserved) #combine all vectors into a matrix
+  trashobserved <- as.vector(t(trashobserved))
+  trashshannon <- do.call("cbind.fill", myshannon) #combine all vectors into a matrix
+  trashshannon <- as.vector(t(trashshannon))
+  df_COI <- data.frame(trashresults, trashranks, trashobserved, trashshannon)
   
+
+
+scratch18s <- prune_samples(sample_sums(zooplankton_18S_silva) > min(sample_sums(zooplankton_18S_silva)), zooplankton_18S_silva)
+scratch18s <- rarefy_even_depth(scratch18s)
+samples <- unique(sample_data(scratch18s)$Sample.ID)
+countreps <- table(sample_data(scratch18s)$Sample.ID)
+countreps <- countreps[countreps == 3]
+samples <- names(countreps)
+
+cbind.fill <- function(...){
+    nm <- list(...) 
+    nm <- lapply(nm, as.matrix)
+    n <- max(sapply(nm, nrow)) 
+    do.call(cbind, lapply(nm, function (x) 
+        rbind(x, matrix(, n-nrow(x), ncol(x))))) 
+}
+
+myresults <- list() #create an empty list for replicates observed
+myranks <- list() #create an empty list for rank order
+myobserved <- list() # create an empty list for number of observed species in the sample
+myshannon <- list() #create empty list for shannon diversity (evenness) of the sample
+k <- 1
+for (i in 1:length(samples)){
+  sampleidentifier <- samples[i]
+  scratch <- subset_samples(scratch18s, Sample.ID == sampleidentifier)
+  scratch <- filter_taxa(scratch, function(x) sum(x) > 0, TRUE)
+  rankabcurve <- racurve(t(otu_table(scratch)))
+  #rankabcurve has info on 1) total abundance of each taxa, 2) relative abundance of each taxa, 3) frequency (number of individual samples it occurs in)
+  df_meta <- as.data.frame(rankabcurve)
+  pa_18S <- phyloseq_standardize_otu_abundance(scratch, method = "pa")
+  pa_18S_merge <- merge_samples(pa_18S, group = "Sample.ID", fun = mean)
+  df <- data.frame(otu_table(pa_18S_merge))
+  df[df == 0] <- NA
+  means <- colMeans(df, na.rm = T) #need to remove zeros - replace with na and then na ignore ? 
+  names(means) <- colnames(df)
+  means <- data.frame(means)
+  df_meta_plus <- merge(df_meta, means, by=0)
+  df_meta_plus <- df_meta_plus[order(-df_meta_plus$abund),]
+  df_meta_plus$rank <- seq(nrow(df_meta_plus))
+  myresults[[k]] <- df_meta_plus$means #save results
+  myranks[[k]] <- df_meta_plus$rank #save ranks
+  myobserved[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Observed")$Observed, n = nrow(df_meta_plus))
+  myshannon[[k]] <- rep(estimate_richness(pa_18S_merge, measures = "Shannon")$Shannon, n = nrow(df_meta_plus))
+  k <- k+1
+}
+  trashresults <- do.call("cbind.fill", myresults) #combine all vectors into a matrix
+  trashresults <- as.vector(t(trashresults))
+  trashranks <- do.call("cbind.fill", myranks) #combine all vectors into a matrix
+  trashranks <- as.vector(t(trashranks))
+  trashobserved <- do.call("cbind.fill", myobserved) #combine all vectors into a matrix
+  trashobserved <- as.vector(t(trashobserved))
+  trashshannon <- do.call("cbind.fill", myshannon) #combine all vectors into a matrix
+  trashshannon <- as.vector(t(trashshannon))
+ # trashnames <- do.call("cbind",myobserved)
+  #colnames(trashresults) <- trashnames
+  df_18S <- data.frame(trashresults, trashranks, trashobserved, trashshannon)
+  
+  
+  df_18S$Marker <- rep("18S")
+  df_COI$Marker <- rep("COI")
+  
+  df <- rbind(df_COI, df_18S)
+ df$trashresults[df$trashresults > 3] <- 3 #we only want to count up to 3 but if there are more than 3 then we can count 3
+  
+
+df$Marker <- factor(df$Marker, levels = c("COI", "18S"))
+
+head(df)
+df$factorresults <- as.factor(df$trashresults)
+
+model <- kruskal.test(factorresults ~ trashranks , data = df)
+model
+
+
+
+#ggplot(df, aes(x = trashranks, y = trashresults)) +
+#    geom_jitter(height = 0.25, size = 0.3) +
+##    ggtitle("Appearance in Replicates by Rank Order") + 
+#    theme_bw(base_size = 12) +
+#    xlab("Rank Order") + 
+#    ylab("Replicates (N)")+ 
+#  facet_wrap(Marker~., scales = "free_x", nrow = 1)+ 
+#  theme(axis.text.x = element_text(color = "black", size = 8),
+#        axis.text.y = element_text(color = "black", size = 8),  
+#        axis.title.x = element_text(color = "black", size = 10),
+#        axis.title.y = element_text(color = "black", size = 10)) +
+#  scale_y_discrete(name = "Replicates (N)", limits = c(1,2,3)) 
+
 
 ```
 
+
 ```{r figure 3}
 df_COI <- data.frame(sample_data(zooplankton_COI_midori))
-df_COI <- df_COI[,c(3,24, 17)]
+df_COI <- df_COI[,c(3,24,25, 17)]
 df_COI$marker <- "COI"
 df_18S <- data.frame(sample_data(zooplankton_18S_silva))
-df_18S <- df_18S[,c(3,26,17)]
+df_18S <- df_18S[,c(3,26,27,17)]
 df_18S$marker <- "18S"
 df <- rbind(df_18S, df_COI)
-
+df$percentnum <- df$percentprocessed*100
 df$marker <- factor(df$marker, levels = c("COI", "18S"))
 
-p <- ggplot(data = df, aes(x=percentprocessed, y=observed, color = volumewaterfiltered))+
-   geom_point(size = 0.3) +
+p <- ggplot(data = df, aes(x=percentnum, y=rarefiedobserved, color = volumewaterfiltered))+
+   geom_jitter(size = 1.5, width = 0.002) +
   facet_wrap(~marker, nrow = 2, scales = "free_y") +
   #stat_summary(fun.data=mean_cl_normal) +
   geom_smooth(method='loess', color = "black", span = 0.8, size = 0.3)+
-  theme_bw(base_size = 7) +
-  scale_color_continuous()+
+  theme_bw(base_size = 12) +
+  scale_color_viridis_c()+
   # ggtitle("18S ASVs") + 
-  labs(color = "Volume of Water \nFiltered") +
+  labs(color = expression("Water Filtered"~(m^3))) +
   xlab("% of Sample Analyzed") +
   ylab("Richness") +
-  theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.text.x = element_text(color = "black", size = 6),
-        axis.text.y = element_text(color = "black", size = 6),  
-        axis.title.x = element_text(color = "black", size = 7),
-        axis.title.y = element_text(color = "black", size = 7))
-p
+  theme(axis.text.x = element_text(angle = 90))+ 
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.text.y = element_text(color = "black", size = 8),  
+        axis.title.x = element_text(color = "black", size = 10),
+        axis.title.y = element_text(color = "black", size = 10))
 
-tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure3_v2_2020-11-17.tiff", width=170,height=60, units = "mm", res = 300) 
+p
+#labs(y = expression ("Acceleration in"~m/s^2))
+
+#ggplot(data = df, aes(x=volumewaterfiltered, y=observed, color = percentprocessed))+
+#   geom_jitter(size = 1, width = 0.002) +
+#  facet_wrap(~marker, nrow = 2, scales = "free_y") +
+#  #stat_summary(fun.data=mean_cl_normal) +
+#  geom_smooth(method='loess', color = "black", span = 0.8, size = 0.3)+
+#  theme_bw(base_size = 10) +
+#  scale_color_viridis_c()+
+#  # ggtitle("18S ASVs") + 
+#  labs(color = "% Processed") +
+#  xlab("Volume of Water Filtered") +
+#  ylab("Richness") +
+#  theme(axis.text.x = element_text(angle = 90))+ 
+#  theme(axis.text.x = element_text(color = "black", size = 7),
+#        axis.text.y = element_text(color = "black", size = 7),  
+#        axis.title.x = element_text(color = "black", size = 9),
+#        axis.title.y = element_text(color = "black", size = 9))
+
+
+cor.test(x = df_COI$percentprocessed, y = df_COI$rarefiedobserved, method = "spearman")
+cor.test(x = df_18S$percentprocessed, y = df_18S$rarefiedobserved, method = "spearman")
+cor.test(x = df_COI$volumewaterfiltered, y = df_COI$rarefiedobserved, method = "spearman")
+cor.test(x = df_18S$volumewaterfiltered, y = df_18S$rarefiedobserved, method = "spearman")
+
+
+tiff("~/Documents/Chapter4/Oct2020_ICES/plots/Figure3_v2_2020-11-17_rev1.tiff", width=170,height=60, units = "mm", res = 300) 
 p + facet_wrap(~marker, nrow = 1) 
 dev.off()
 
+
+```
+
+```{r summary taxonomy table}
+phylum18s <- as.data.frame(table(tax_table(zooplankton_18S_ncbi)[,2]))
+rownames(phylum18s) <- phylum18s$Var1
+phylumcoi <- as.data.frame(table(tax_table(zooplankton_COI_ncbi)[,2]))
+rownames(phylumcoi) <- phylumcoi$Var1
+table <- merge(phylum18s, phylumcoi, by.x = "Var1", by.y = "Var1", all = T)
+colnames(table) <- c("group", "18S_NCBI", "COI_NCBI")
+  
+silvaphylum18s <- as.data.frame(table(tax_table(zooplankton_18S_silva)[,5]))
+rownames(silvaphylum18s) <- silvaphylum18s$Var1
+midoriphylumcoi <- as.data.frame(table(tax_table(zooplankton_COI_midori)[,2]))
+rownames(midoriphylumcoi) <- midoriphylumcoi$Var1
+tablediff <- merge(silvaphylum18s, midoriphylumcoi, by = "Var1", all = T )
+colnames(tablediff) <- c("group", "18S_SILVA", "COI_MIDORI")
+
+tablefin <- merge(table, tablediff, by = "group", all = T)
+
+chordata <- subset_taxa(zooplankton_18S_ncbi, ta2 =="Chordata") #
 
 ```
 
